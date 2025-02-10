@@ -12,6 +12,10 @@ AOnaPlayerCameraManager::AOnaPlayerCameraManager()
 }
 
 
+/**
+ * Set ControlledPawn and CameraBehaviorComponent's PlayerController and CameraBehaviorComponent's Pawn
+ * @param Pawn 
+ */
 void AOnaPlayerCameraManager::OnPossess(APawn* Pawn)
 {
 	ControlledPawn = Pawn;
@@ -25,65 +29,98 @@ void AOnaPlayerCameraManager::OnPossess(APawn* Pawn)
 
 void AOnaPlayerCameraManager::CustomCameraBehavior()
 {
-	FetchCameraParams();
-	CalcAndSetTargetCameraRotation();
-	CalcAndSetPivotTargets();
-}
-
-void AOnaPlayerCameraManager::FetchCameraParams()
-{
 	
-}
+	
+	/**
+	 * Get Camera Parameters from CharacterBP via the Camera Interface
+	 * Get PivotTarget, FPTarget, TPFOV, FPFOV
+	 */
+	
+	/**
+	 * Calculate Target Camera Rotation. Use the Control Rotation and interpolate for smooth camera rotation.
+	 * Calc TargetCameraRotation
+	 */
+	APlayerController* playerController = GetOwningPlayerController();
+	FRotator controlRotation = playerController->GetControlRotation();
+	FRotator cameraRotation = GetCameraRotation();
+	float rotationLagSpeed = GetCameraBehaviorParam("RotationLagSpeed");
+	float deltaTime = GetWorld()->GetDeltaSeconds();
+	FRotator targetCameraRotation = FMath::RInterpTo(cameraRotation, controlRotation, deltaTime, rotationLagSpeed);
+	float overrideDebug = GetCameraBehaviorParam("OverrideDebug");
+	TargetCameraRotation = FMath::Lerp(targetCameraRotation, DebugViewRotation, overrideDebug);
 
-void AOnaPlayerCameraManager::CalcAndSetTargetCameraRotation()
-{
-	APlayerController* PlayerController = GetOwningPlayerController();
-	FRotator ControlRotation = PlayerController->GetControlRotation();
-	FRotator CameraRotation = GetCameraRotation();
-	float RotationLagSpeed = GetCameraBehaviorParam("RotationLagSpeed");
-	float DeltaTime = GetWorld()->GetDeltaSeconds();
+	/**
+	 * Calculate the Smoothed Pivot Target (Orange Sphere). Get the 3P Pivot Target (Green Sphere) and interpolate using axis independent lag for maximum control.
+	 * Calc SmoothedPivotTarget
+	 */
+	FVector LagSpeed = FVector(
+	GetCameraBehaviorParam("PivotLagSpeed_X"),
+	GetCameraBehaviorParam("PivotLagSpeed_Y)"),
+	GetCameraBehaviorParam("PivotLagSpeed_Z"));
+	FVector pivotLocation = CalcAxisIndependentLag(SmoothedPivotTarget.GetLocation(), PivotTarget.GetLocation(), TargetCameraRotation, LagSpeed);
+	SmoothedPivotTarget = FTransform(PivotTarget.GetRotation(), pivotLocation, FVector(1.0f));
 
-	FRotator TargetRotation = FMath::RInterpTo(CameraRotation, ControlRotation, DeltaTime, RotationLagSpeed);
+	/**
+	 * Calculate Pivot Location (BlueSphere). Get the Smoothed Pivot Target and apply local offsets for further camera control.
+	 * Calc PivotLocation
+	 */
+	float pivotOffset_X = GetCameraBehaviorParam("PivotOffset_X");
+	float pivotOffset_Y = GetCameraBehaviorParam("PivotOffset_Y");
+	float pivotOffset_Z = GetCameraBehaviorParam("PivotOffset_Z");
+	PivotLocation = SmoothedPivotTarget.GetLocation() +
+		SmoothedPivotTarget.GetRotation().GetForwardVector() * pivotOffset_X +
+		SmoothedPivotTarget.GetRotation().GetRightVector() * pivotOffset_Y +
+		SmoothedPivotTarget.GetRotation().GetUpVector() * pivotOffset_Z;
 
-	float OverrideDebug = GetCameraBehaviorParam("OverrideDebug");
-	TargetRotation = FMath::Lerp(TargetRotation, DebugViewRotation, OverrideDebug);
-
-	TargetCameraRotation = TargetRotation;
+	/**
+	 * Calculate Target Camera Location. Get the Pivot location and apply camera relative offsets.
+	 * Calc TargetCameraLocation
+	 */
+	float cameraOffset_X = GetCameraBehaviorParam("CameraOffset_X");
+	float cameraOffset_Y = GetCameraBehaviorParam("CameraOffset_Y");
+	float cameraOffset_Z = GetCameraBehaviorParam("CameraOffset_Z");
+	FVector unlerpedCameraLocation = PivotLocation +
+		TargetCameraRotation.Quaternion().GetForwardVector() * cameraOffset_X +
+		TargetCameraRotation.Quaternion().GetRightVector() * cameraOffset_Y +
+		TargetCameraRotation.Quaternion().GetUpVector() * cameraOffset_Z;
+	FVector unlerpedDebugCameraLocation = PivotTarget.GetLocation() + DebugViewOffset;
+	TargetCameraLocation = FMath::Lerp(unlerpedCameraLocation, unlerpedDebugCameraLocation, overrideDebug);
+	
 }
 
 void AOnaPlayerCameraManager::CalcAndSetPivotTargets()
 {
-	FVector LagSpeed = FVector(
+	FVector lagSpeed = FVector(
 		GetCameraBehaviorParam("PivotLagSpeed_X"),
 		GetCameraBehaviorParam("PivotLagSpeed_Y)"),
 		GetCameraBehaviorParam("PivotLagSpeed_Z"));
 
-	FVector PivotLocation = CalcAxisIndependentLag(SmoothedPivotTarget.GetLocation(), PivotTarget.GetLocation(), TargetCameraRotation, LagSpeed);
-	FTransform PivotTransform = FTransform(PivotTarget.GetRotation(), PivotLocation, FVector(1.0f));
-	SmoothedPivotTarget = PivotTransform;
+	FVector pivotLocation = CalcAxisIndependentLag(SmoothedPivotTarget.GetLocation(), PivotTarget.GetLocation(), TargetCameraRotation, lagSpeed);
+	FTransform pivotTransform = FTransform(PivotTarget.GetRotation(), pivotLocation, FVector(1.0f));
+	SmoothedPivotTarget = pivotTransform;
 }
 
-FVector AOnaPlayerCameraManager::CalcAxisIndependentLag(const FVector& CurrentLocation, const FVector& TargetLocation, const FRotator& CameraRotation, const FVector LagSpeeds)
+FVector AOnaPlayerCameraManager::CalcAxisIndependentLag(const FVector& currentLocation, const FVector& targetLocation, const FRotator& cameraRotation, const FVector lagSpeeds)
 {
-	FRotator CameraRotYaw = FRotator(0.0f, CameraRotation.Yaw, 0.0f);
-	FVector UnrotatedCurrentLocation = CameraRotYaw.UnrotateVector(CurrentLocation);
-	FVector UnrotatedTargetLocation = CameraRotYaw.UnrotateVector(TargetLocation);
-	float DeltaSecond = GetWorld()->GetDeltaSeconds();
+	FRotator cameraRotYaw = FRotator(0.0f, cameraRotation.Yaw, 0.0f);
+	FVector unrotatedCurrentLocation = cameraRotYaw.UnrotateVector(currentLocation);
+	FVector unrotatedTargetLocation = cameraRotYaw.UnrotateVector(targetLocation);
+	float deltaSecond = GetWorld()->GetDeltaSeconds();
 
-	FVector ResultLocation = FVector(
-		FMath::FInterpTo(UnrotatedCurrentLocation.X, UnrotatedTargetLocation.X, DeltaSecond, LagSpeeds.X),
-		FMath::FInterpTo(UnrotatedCurrentLocation.Y, UnrotatedTargetLocation.Y, DeltaSecond, LagSpeeds.Y),
-		FMath::FInterpTo(UnrotatedCurrentLocation.Z, UnrotatedTargetLocation.Z, DeltaSecond, LagSpeeds.Z));
+	FVector resultLocation = FVector(
+		FMath::FInterpTo(unrotatedCurrentLocation.X, unrotatedTargetLocation.X, deltaSecond, lagSpeeds.X),
+		FMath::FInterpTo(unrotatedCurrentLocation.Y, unrotatedTargetLocation.Y, deltaSecond, lagSpeeds.Y),
+		FMath::FInterpTo(unrotatedCurrentLocation.Z, unrotatedTargetLocation.Z, deltaSecond, lagSpeeds.Z));
 
-	FVector RotatedResultLocation = CameraRotYaw.RotateVector(ResultLocation);
-	return RotatedResultLocation;
+	FVector rotatedResultLocation = cameraRotYaw.RotateVector(resultLocation);
+	return rotatedResultLocation;
 }
 
-float AOnaPlayerCameraManager::GetCameraBehaviorParam(FName CurveName)
+float AOnaPlayerCameraManager::GetCameraBehaviorParam(FName curveName)
 {
-	if (const UAnimInstance* AnimInstance = CameraBehaviorComponent->GetAnimInstance())
+	if (const UAnimInstance* animInstance = CameraBehaviorComponent->GetAnimInstance())
 	{
-		return AnimInstance->GetCurveValue(CurveName);
+		return animInstance->GetCurveValue(curveName);
 	}
 	return 0.0f;
 }

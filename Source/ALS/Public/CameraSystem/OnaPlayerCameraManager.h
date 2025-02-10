@@ -20,6 +20,10 @@ public:
 	TObjectPtr<USkeletalMeshComponent> CameraBehaviorComponent;
 	
 public:
+	
+	/**
+	 * Set By OnPossess
+	 */
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
 	TObjectPtr<APawn> ControlledPawn;
 	
@@ -32,6 +36,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
 	FVector RootLocation;
 
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
+	FVector PivotLocation;
+	
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
 	FTransform PivotTarget;
 	
@@ -52,18 +59,18 @@ public:
 protected:
 	UFUNCTION()
 	void CustomCameraBehavior();
-	UFUNCTION()
-	void FetchCameraParams();
-	UFUNCTION()
-	void CalcAndSetTargetCameraRotation();
+	
+	/**
+	 * Calculate the Smoothed Pivot Target (Orange Sphere). Get the 3P Pivot Target (Green Sphere) and interpolate using axis independent lag for maximum control.
+	 */
 	UFUNCTION()
 	void CalcAndSetPivotTargets();
 protected:
 
 	UFUNCTION(BlueprintCallable)
-	FVector CalcAxisIndependentLag(const FVector& CurrentLocation, const FVector& TargetLocation, const FRotator& CameraRotation, const FVector LagSpeeds);
+	FVector CalcAxisIndependentLag(const FVector& currentLocation, const FVector& targetLocation, const FRotator& cameraRotation, const FVector lagSpeeds);
 	
 	UFUNCTION(BlueprintCallable)
-	float GetCameraBehaviorParam(FName CurveName);
+	float GetCameraBehaviorParam(FName curveName);
 	
 };
