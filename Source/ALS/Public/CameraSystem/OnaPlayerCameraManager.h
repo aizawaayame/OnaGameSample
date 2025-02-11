@@ -40,9 +40,6 @@ public:
 	FVector PivotLocation;
 	
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
-	FTransform PivotTarget;
-	
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
 	FTransform SmoothedPivotTarget;
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
@@ -59,12 +56,7 @@ public:
 protected:
 	UFUNCTION()
 	void CustomCameraBehavior();
-	
-	/**
-	 * Calculate the Smoothed Pivot Target (Orange Sphere). Get the 3P Pivot Target (Green Sphere) and interpolate using axis independent lag for maximum control.
-	 */
-	UFUNCTION()
-	void CalcAndSetPivotTargets();
+
 protected:
 
 	UFUNCTION(BlueprintCallable)

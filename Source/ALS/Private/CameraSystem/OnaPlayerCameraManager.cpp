@@ -3,6 +3,7 @@
 
 #include "CameraSystem/OnaPlayerCameraManager.h"
 #include "CameraSystem/OnaPlayerCameraBehavior.h"
+#include "Interfaces/CameraInterface.h"
 
 
 AOnaPlayerCameraManager::AOnaPlayerCameraManager()
@@ -29,13 +30,22 @@ void AOnaPlayerCameraManager::OnPossess(APawn* Pawn)
 
 void AOnaPlayerCameraManager::CustomCameraBehavior()
 {
-	
-	
 	/**
 	 * Get Camera Parameters from CharacterBP via the Camera Interface
-	 * Get PivotTarget, FPTarget, TPFOV, FPFOV
+	 * Get local variables  PivotTarget, and FPTarget, TPFOV, FPFOV
 	 */
-	
+	FTransform pivotTarget = FTransform::Identity;
+	FVector fpTarget = FVector::ZeroVector;
+	float tpFOV = 0.0f;
+	float fpFOV = 0.0f;
+	bool isRightShoulder = false;
+	bool isControlledPawnImplCameraInterface= ControlledPawn->GetClass()->ImplementsInterface(UCameraInterface::StaticClass());
+	if (isControlledPawnImplCameraInterface)
+	{
+		pivotTarget = ICameraInterface::Execute_GetTPPivotTarget(ControlledPawn);
+		fpTarget = ICameraInterface::Execute_GetFPCameraTarget(ControlledPawn);
+		ICameraInterface::Execute_GetCameraParameters(ControlledPawn, tpFOV, fpFOV, isRightShoulder);
+	}
 	/**
 	 * Calculate Target Camera Rotation. Use the Control Rotation and interpolate for smooth camera rotation.
 	 * Calc TargetCameraRotation
@@ -57,8 +67,8 @@ void AOnaPlayerCameraManager::CustomCameraBehavior()
 	GetCameraBehaviorParam("PivotLagSpeed_X"),
 	GetCameraBehaviorParam("PivotLagSpeed_Y)"),
 	GetCameraBehaviorParam("PivotLagSpeed_Z"));
-	FVector pivotLocation = CalcAxisIndependentLag(SmoothedPivotTarget.GetLocation(), PivotTarget.GetLocation(), TargetCameraRotation, LagSpeed);
-	SmoothedPivotTarget = FTransform(PivotTarget.GetRotation(), pivotLocation, FVector(1.0f));
+	FVector pivotLocation = CalcAxisIndependentLag(SmoothedPivotTarget.GetLocation(), pivotTarget.GetLocation(), TargetCameraRotation, LagSpeed);
+	SmoothedPivotTarget = FTransform(pivotTarget.GetRotation(), pivotLocation, FVector(1.0f));
 
 	/**
 	 * Calculate Pivot Location (BlueSphere). Get the Smoothed Pivot Target and apply local offsets for further camera control.
@@ -83,21 +93,12 @@ void AOnaPlayerCameraManager::CustomCameraBehavior()
 		TargetCameraRotation.Quaternion().GetForwardVector() * cameraOffset_X +
 		TargetCameraRotation.Quaternion().GetRightVector() * cameraOffset_Y +
 		TargetCameraRotation.Quaternion().GetUpVector() * cameraOffset_Z;
-	FVector unlerpedDebugCameraLocation = PivotTarget.GetLocation() + DebugViewOffset;
+	FVector unlerpedDebugCameraLocation = pivotTarget.GetLocation() + DebugViewOffset;
 	TargetCameraLocation = FMath::Lerp(unlerpedCameraLocation, unlerpedDebugCameraLocation, overrideDebug);
-	
-}
 
-void AOnaPlayerCameraManager::CalcAndSetPivotTargets()
-{
-	FVector lagSpeed = FVector(
-		GetCameraBehaviorParam("PivotLagSpeed_X"),
-		GetCameraBehaviorParam("PivotLagSpeed_Y)"),
-		GetCameraBehaviorParam("PivotLagSpeed_Z"));
-
-	FVector pivotLocation = CalcAxisIndependentLag(SmoothedPivotTarget.GetLocation(), PivotTarget.GetLocation(), TargetCameraRotation, lagSpeed);
-	FTransform pivotTransform = FTransform(PivotTarget.GetRotation(), pivotLocation, FVector(1.0f));
-	SmoothedPivotTarget = pivotTransform;
+	/**
+	 * Trace for an object between the camera and character to apply a corrective offset. Trace origins are set within the Character BP via the Camera Interface. Functions like the normal spring arm, but can allow for different trace origins regardless of the pivot. 
+	 */
 }
 
 FVector AOnaPlayerCameraManager::CalcAxisIndependentLag(const FVector& currentLocation, const FVector& targetLocation, const FRotator& cameraRotation, const FVector lagSpeeds)
