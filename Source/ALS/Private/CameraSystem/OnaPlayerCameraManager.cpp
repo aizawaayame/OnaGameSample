@@ -4,6 +4,7 @@
 #include "CameraSystem/OnaPlayerCameraManager.h"
 #include "CameraSystem/OnaPlayerCameraBehavior.h"
 #include "Interfaces/CameraInterface.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 
 AOnaPlayerCameraManager::AOnaPlayerCameraManager()
@@ -39,13 +40,22 @@ void AOnaPlayerCameraManager::CustomCameraBehavior()
 	float tpFOV = 0.0f;
 	float fpFOV = 0.0f;
 	bool isRightShoulder = false;
+	FVector traceOrigin = FVector::ZeroVector;
+	float traceRadius = 0.0f;
+	ETraceTypeQuery traceChannel = ETraceTypeQuery::TraceTypeQuery1;
+
 	bool isControlledPawnImplCameraInterface= ControlledPawn->GetClass()->ImplementsInterface(UCameraInterface::StaticClass());
 	if (isControlledPawnImplCameraInterface)
 	{
 		pivotTarget = ICameraInterface::Execute_GetTPPivotTarget(ControlledPawn);
 		fpTarget = ICameraInterface::Execute_GetFPCameraTarget(ControlledPawn);
 		ICameraInterface::Execute_GetCameraParameters(ControlledPawn, tpFOV, fpFOV, isRightShoulder);
+		
+		TEnumAsByte<ETraceTypeQuery> traceChannelByte;
+		ICameraInterface::Execute_GetTPTraceParams(ControlledPawn, traceOrigin, traceRadius, traceChannelByte);
+		traceChannel = traceChannelByte.GetValue();
 	}
+
 	/**
 	 * Calculate Target Camera Rotation. Use the Control Rotation and interpolate for smooth camera rotation.
 	 * Calc TargetCameraRotation
@@ -99,6 +109,24 @@ void AOnaPlayerCameraManager::CustomCameraBehavior()
 	/**
 	 * Trace for an object between the camera and character to apply a corrective offset. Trace origins are set within the Character BP via the Camera Interface. Functions like the normal spring arm, but can allow for different trace origins regardless of the pivot. 
 	 */
+	FHitResult hitResult;
+	UKismetSystemLibrary::SphereTraceSingle(
+		GetWorld(),
+		traceOrigin,
+		TargetCameraLocation,
+		traceRadius,
+		traceChannel,
+		false,
+		TArray<AActor*>(),
+		EDrawDebugTrace::ForOneFrame,
+		hitResult,
+		true);
+	if (hitResult.bBlockingHit && !hitResult.bStartPenetrating)
+	{
+		FVector hitLocation = hitResult.Location;
+		FVector traceEnd = hitResult.TraceEnd;
+		TargetCameraLocation = TargetCameraLocation + (hitLocation - traceEnd);
+	}
 }
 
 FVector AOnaPlayerCameraManager::CalcAxisIndependentLag(const FVector& currentLocation, const FVector& targetLocation, const FRotator& cameraRotation, const FVector lagSpeeds)
