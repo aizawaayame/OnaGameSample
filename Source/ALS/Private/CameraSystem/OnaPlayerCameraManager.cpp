@@ -4,6 +4,7 @@
 #include "CameraSystem/OnaPlayerCameraManager.h"
 #include "CameraSystem/OnaPlayerCameraBehavior.h"
 #include "Interfaces/CameraInterface.h"
+#include "Interfaces/ControllerInterface.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 
@@ -126,6 +127,31 @@ void AOnaPlayerCameraManager::CustomCameraBehavior()
 		FVector hitLocation = hitResult.Location;
 		FVector traceEnd = hitResult.TraceEnd;
 		TargetCameraLocation = TargetCameraLocation + (hitLocation - traceEnd);
+	}
+
+	/**
+	 * Draw Debug Shapes.
+	 */
+	bool isOwningPlayerControllerImplControllerInterface = playerController->GetClass()->ImplementsInterface(UControllerInterface::StaticClass());
+	if (isOwningPlayerControllerImplControllerInterface)
+	{
+		ACharacter* debugFocusCharacter = nullptr;
+		bool debugView = false;
+		bool showHUD = false;
+		bool showTraces = false;
+		bool showDebugShapes = false;
+		bool showLayerColors = false;
+		bool slomo = false;
+		bool showCharacterInfo = false;
+		IControllerInterface::Execute_GetDebugInfo(playerController, debugFocusCharacter, debugView, showHUD, showTraces, showDebugShapes, showLayerColors, slomo, showCharacterInfo);
+		if (showDebugShapes)
+		{
+			DrawDebugSphere(GetWorld(), pivotTarget.GetLocation(), 16.0f, 8, FColor::Green, false, 0.0f, 0, 0.5f);
+			DrawDebugSphere(GetWorld(), SmoothedPivotTarget.GetLocation(), 16.0f, 8, FColor::Orange, false, 0.0f, 0, 0.5f);
+			DrawDebugSphere(GetWorld(), PivotLocation, 16.0f, 8, FColor::Blue, false, 0.0f, 0, 0.5f);
+			DrawDebugLine(GetWorld(), SmoothedPivotTarget.GetLocation(), pivotTarget.GetLocation(), FColor::Orange, false, 0.0f, 0, 1.f);
+			DrawDebugLine(GetWorld(), PivotLocation, SmoothedPivotTarget.GetLocation(), FColor::Blue, false, 0.0f, 0, 1.f);
+		}
 	}
 }
 
