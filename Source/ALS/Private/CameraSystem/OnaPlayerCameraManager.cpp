@@ -30,7 +30,7 @@ void AOnaPlayerCameraManager::OnPossess(APawn* Pawn)
 	}
 }
 
-void AOnaPlayerCameraManager::CustomCameraBehavior()
+void AOnaPlayerCameraManager::CustomCameraBehavior(UPARAM(ref) FVector& location, UPARAM(ref) FRotator& rotation, UPARAM(ref) float fov)
 {
 	/**
 	 * Get Camera Parameters from CharacterBP via the Camera Interface
@@ -153,6 +153,24 @@ void AOnaPlayerCameraManager::CustomCameraBehavior()
 			DrawDebugLine(GetWorld(), PivotLocation, SmoothedPivotTarget.GetLocation(), FColor::Blue, false, 0.0f, 0, 1.f);
 		}
 	}
+
+	/**
+	 * Lerp First Person Override and return target camera parameters.
+	 */
+	FTransform targetCameraTransform = FTransform(TargetCameraRotation.Quaternion(), TargetCameraLocation);
+	FTransform targetFirstPersonTransform= FTransform(TargetCameraRotation.Quaternion(), fpTarget);
+	float weight_FirstPerson = GetCameraBehaviorParam("Weight_FirstPerson");
+	FTransform lerpedCameraTransform = FTransform();
+	lerpedCameraTransform.Blend(targetCameraTransform, targetFirstPersonTransform, weight_FirstPerson);
+	
+	
+	FTransform debugCameraTransform = FTransform(DebugViewRotation, TargetCameraLocation);
+	FTransform lerpedDebugTransform = FTransform();
+	lerpedDebugTransform.Blend(lerpedCameraTransform, debugCameraTransform, overrideDebug);
+
+	location = lerpedDebugTransform.GetLocation();
+	rotation = lerpedDebugTransform.Rotator();
+	fov = FMath::Lerp(tpFOV, fpFOV, weight_FirstPerson);
 }
 
 FVector AOnaPlayerCameraManager::CalcAxisIndependentLag(const FVector& currentLocation, const FVector& targetLocation, const FRotator& cameraRotation, const FVector lagSpeeds)

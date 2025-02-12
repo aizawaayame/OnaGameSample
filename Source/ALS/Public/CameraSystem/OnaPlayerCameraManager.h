@@ -54,8 +54,8 @@ public:
 	void OnPossess(APawn* Pawn);
 	
 protected:
-	UFUNCTION()
-	void CustomCameraBehavior();
+	UFUNCTION(BlueprintCallable)
+	void CustomCameraBehavior(UPARAM(ref) FVector& location, UPARAM(ref) FRotator& rotation, UPARAM(ref) float fov);
 
 protected:
 

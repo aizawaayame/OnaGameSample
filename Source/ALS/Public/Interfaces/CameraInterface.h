@@ -25,7 +25,7 @@ class ALS_API ICameraInterface
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="CameraSystem")
-	void GetCameraParameters(UPARAM(ref) float& tpFOV, UPARAM(ref) float& fpFOV, UPARAM(ref) bool& isRightShoulder) const;
+	void GetCameraParameters(float& tpFOV, float& fpFOV, bool& isRightShoulder) const;
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="CameraSystem")
 	FVector GetFPCameraTarget() const;
@@ -34,6 +34,6 @@ public:
 	FTransform GetTPPivotTarget() const;
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="CameraSystem")
-	void GetTPTraceParams(UPARAM(ref) FVector& traceOrigin, UPARAM(ref) float& traceRadius, UPARAM(ref) TEnumAsByte<ETraceTypeQuery>& traceChannel) const;
+	void GetTPTraceParams( FVector& traceOrigin, float& traceRadius, TEnumAsByte<ETraceTypeQuery>& traceChannel) const;
 };
 

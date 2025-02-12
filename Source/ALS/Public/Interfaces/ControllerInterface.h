@@ -23,12 +23,12 @@ class ALS_API IControllerInterface
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Controller|Debug")
-	void GetDebugInfo(UPARAM(ref) ACharacter* debugFocusCharacter,
-		UPARAM(ref) bool& debugView,
-		UPARAM(ref) bool& showHUD,
-		UPARAM(ref) bool& showTraces,
-		UPARAM(ref) bool& showDebugShapes,
-		UPARAM(ref) bool& showLayerColors,
-		UPARAM(ref) bool& slomo,
-		UPARAM(ref) bool& showCharacterInfo) const;
+	void GetDebugInfo(ACharacter*& debugFocusCharacter,
+		bool& debugView,
+		bool& showHUD,
+		bool& showTraces,
+		bool& showDebugShapes,
+		bool& showLayerColors,
+		bool& slomo,
+		bool& showCharacterInfo) const;
 };
