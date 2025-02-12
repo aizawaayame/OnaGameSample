@@ -38,24 +38,28 @@ void AOnaPlayerCameraManager::OnPossess(APawn* Pawn)
  */
 void AOnaPlayerCameraManager::CustomCameraBehavior(UPARAM(ref) FVector& location, UPARAM(ref) FRotator& rotation, UPARAM(ref) float fov)
 {
+	// 前置校验
+	if (!ControlledPawn || !GetWorld()) return;
+
+	APlayerController* playerController = GetOwningPlayerController();
 	/**
 	 * Get Camera Parameters from CharacterBP via the Camera Interface
 	 * Get local variables  PivotTarget, and FPTarget, TPFOV, FPFOV
+	 * 从Controlled Pawn通过Camera Interface获取相机参数, pivotTargetTransform, fpTargetLocation, tpFOV, fpFOV
 	 */
-	FTransform pivotTarget = FTransform::Identity;
-	FVector fpTarget = FVector::ZeroVector;
+	FTransform pivotTargetTransform = FTransform::Identity;
+	FVector fpTargetLocation = FVector::ZeroVector;
 	float tpFOV = 0.0f;
 	float fpFOV = 0.0f;
 	bool isRightShoulder = false;
 	FVector traceOrigin = FVector::ZeroVector;
 	float traceRadius = 0.0f;
 	ETraceTypeQuery traceChannel = ETraceTypeQuery::TraceTypeQuery1;
-
-	bool isControlledPawnImplCameraInterface= ControlledPawn->GetClass()->ImplementsInterface(UCameraInterface::StaticClass());
-	if (isControlledPawnImplCameraInterface)
+	
+	if (ControlledPawn && ControlledPawn->GetClass()->ImplementsInterface(UCameraInterface::StaticClass()))
 	{
-		pivotTarget = ICameraInterface::Execute_GetTPPivotTarget(ControlledPawn);
-		fpTarget = ICameraInterface::Execute_GetFPCameraTarget(ControlledPawn);
+		pivotTargetTransform = ICameraInterface::Execute_GetTPPivotTargetTransform(ControlledPawn);
+		fpTargetLocation = ICameraInterface::Execute_GetFPCameraTargetLocation(ControlledPawn);
 		ICameraInterface::Execute_GetCameraParameters(ControlledPawn, tpFOV, fpFOV, isRightShoulder);
 		
 		TEnumAsByte<ETraceTypeQuery> traceChannelByte;
@@ -67,12 +71,14 @@ void AOnaPlayerCameraManager::CustomCameraBehavior(UPARAM(ref) FVector& location
 	 * Calculate Target Camera Rotation. Use the Control Rotation and interpolate for smooth camera rotation.
 	 * Calc TargetCameraRotation
 	 */
-	APlayerController* playerController = GetOwningPlayerController();
 	FRotator controlRotation = playerController->GetControlRotation();
 	FRotator cameraRotation = GetCameraRotation();
 	float rotationLagSpeed = GetCameraBehaviorParam("RotationLagSpeed");
 	float deltaTime = GetWorld()->GetDeltaSeconds();
+	
+	// 原始旋转插值（未考虑最短路径）, 当旋转角度超过180度时可能出现翻转
 	FRotator targetCameraRotation = FMath::RInterpTo(cameraRotation, controlRotation, deltaTime, rotationLagSpeed);
+
 	float overrideDebug = GetCameraBehaviorParam("OverrideDebug");
 	TargetCameraRotation = FMath::Lerp(targetCameraRotation, DebugViewRotation, overrideDebug);
 
@@ -84,8 +90,8 @@ void AOnaPlayerCameraManager::CustomCameraBehavior(UPARAM(ref) FVector& location
 	GetCameraBehaviorParam("PivotLagSpeed_X"),
 	GetCameraBehaviorParam("PivotLagSpeed_Y"),
 	GetCameraBehaviorParam("PivotLagSpeed_Z"));
-	FVector pivotLocation = CalcAxisIndependentLag(SmoothedPivotTarget.GetLocation(), pivotTarget.GetLocation(), TargetCameraRotation, LagSpeed);
-	SmoothedPivotTarget = FTransform(pivotTarget.GetRotation(), pivotLocation, FVector(1.0f));
+	FVector pivotLocation = CalcAxisIndependentLag(SmoothedPivotTarget.GetLocation(), pivotTargetTransform.GetLocation(), TargetCameraRotation, LagSpeed);
+	SmoothedPivotTarget = FTransform(pivotTargetTransform.GetRotation(), pivotLocation, FVector(1.0f));
 
 	/**
 	 * Calculate Pivot Location (BlueSphere). Get the Smoothed Pivot Target and apply local offsets for further camera control.
@@ -110,7 +116,7 @@ void AOnaPlayerCameraManager::CustomCameraBehavior(UPARAM(ref) FVector& location
 		TargetCameraRotation.Quaternion().GetForwardVector() * cameraOffset_X +
 		TargetCameraRotation.Quaternion().GetRightVector() * cameraOffset_Y +
 		TargetCameraRotation.Quaternion().GetUpVector() * cameraOffset_Z;
-	FVector unlerpedDebugCameraLocation = pivotTarget.GetLocation() + DebugViewOffset;
+	FVector unlerpedDebugCameraLocation = pivotTargetTransform.GetLocation() + DebugViewOffset;
 	TargetCameraLocation = FMath::Lerp(unlerpedCameraLocation, unlerpedDebugCameraLocation, overrideDebug);
 
 	/**
@@ -138,8 +144,7 @@ void AOnaPlayerCameraManager::CustomCameraBehavior(UPARAM(ref) FVector& location
 	/**
 	 * Draw Debug Shapes.
 	 */
-	bool isOwningPlayerControllerImplControllerInterface = playerController->GetClass()->ImplementsInterface(UControllerInterface::StaticClass());
-	if (isOwningPlayerControllerImplControllerInterface)
+	if (playerController && playerController->GetClass()->ImplementsInterface(UControllerInterface::StaticClass()))
 	{
 		ACharacter* debugFocusCharacter = nullptr;
 		bool debugView = false;
@@ -152,10 +157,10 @@ void AOnaPlayerCameraManager::CustomCameraBehavior(UPARAM(ref) FVector& location
 		IControllerInterface::Execute_GetDebugInfo(playerController, debugFocusCharacter, debugView, showHUD, showTraces, showDebugShapes, showLayerColors, slomo, showCharacterInfo);
 		if (showDebugShapes)
 		{
-			DrawDebugSphere(GetWorld(), pivotTarget.GetLocation(), 16.0f, 8, FColor::Green, false, 0.0f, 0, 0.5f);
+			DrawDebugSphere(GetWorld(), pivotTargetTransform.GetLocation(), 16.0f, 8, FColor::Green, false, 0.0f, 0, 0.5f);
 			DrawDebugSphere(GetWorld(), SmoothedPivotTarget.GetLocation(), 16.0f, 8, FColor::Orange, false, 0.0f, 0, 0.5f);
 			DrawDebugSphere(GetWorld(), PivotLocation, 16.0f, 8, FColor::Blue, false, 0.0f, 0, 0.5f);
-			DrawDebugLine(GetWorld(), SmoothedPivotTarget.GetLocation(), pivotTarget.GetLocation(), FColor::Orange, false, 0.0f, 0, 1.f);
+			DrawDebugLine(GetWorld(), SmoothedPivotTarget.GetLocation(), pivotTargetTransform.GetLocation(), FColor::Orange, false, 0.0f, 0, 1.f);
 			DrawDebugLine(GetWorld(), PivotLocation, SmoothedPivotTarget.GetLocation(), FColor::Blue, false, 0.0f, 0, 1.f);
 		}
 	}
@@ -164,15 +169,15 @@ void AOnaPlayerCameraManager::CustomCameraBehavior(UPARAM(ref) FVector& location
 	 * Lerp First Person Override and return target camera parameters.
 	 */
 	FTransform targetCameraTransform = FTransform(TargetCameraRotation.Quaternion(), TargetCameraLocation);
-	FTransform targetFirstPersonTransform= FTransform(TargetCameraRotation.Quaternion(), fpTarget);
+	FTransform targetFirstPersonTransform= FTransform(TargetCameraRotation.Quaternion(), fpTargetLocation);
 	float weight_FirstPerson = GetCameraBehaviorParam("Weight_FirstPerson");
 	FTransform lerpedCameraTransform = FTransform();
-	lerpedCameraTransform.Blend(targetCameraTransform, targetFirstPersonTransform, weight_FirstPerson);
+	lerpedCameraTransform.Blend(targetCameraTransform, targetFirstPersonTransform,1.f - weight_FirstPerson);
 	
 	
 	FTransform debugCameraTransform = FTransform(DebugViewRotation, TargetCameraLocation);
 	FTransform lerpedDebugTransform = FTransform();
-	lerpedDebugTransform.Blend(lerpedCameraTransform, debugCameraTransform, overrideDebug);
+	lerpedDebugTransform.Blend(lerpedCameraTransform, debugCameraTransform,1.f - overrideDebug);
 
 	location = lerpedDebugTransform.GetLocation();
 	rotation = lerpedDebugTransform.Rotator();

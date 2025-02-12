@@ -28,10 +28,10 @@ public:
 	void GetCameraParameters(float& tpFOV, float& fpFOV, bool& isRightShoulder) const;
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="CameraSystem")
-	FVector GetFPCameraTarget() const;
+	FVector GetFPCameraTargetLocation() const;
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="CameraSystem")
-	FTransform GetTPPivotTarget() const;
+	FTransform GetTPPivotTargetTransform() const;
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="CameraSystem")
 	void GetTPTraceParams( FVector& traceOrigin, float& traceRadius, TEnumAsByte<ETraceTypeQuery>& traceChannel) const;
