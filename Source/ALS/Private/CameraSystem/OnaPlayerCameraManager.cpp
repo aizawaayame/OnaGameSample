@@ -30,6 +30,12 @@ void AOnaPlayerCameraManager::OnPossess(APawn* Pawn)
 	}
 }
 
+/**
+ * Custom Camera Behavior
+ * @param location 
+ * @param rotation 
+ * @param fov 
+ */
 void AOnaPlayerCameraManager::CustomCameraBehavior(UPARAM(ref) FVector& location, UPARAM(ref) FRotator& rotation, UPARAM(ref) float fov)
 {
 	/**
@@ -76,7 +82,7 @@ void AOnaPlayerCameraManager::CustomCameraBehavior(UPARAM(ref) FVector& location
 	 */
 	FVector LagSpeed = FVector(
 	GetCameraBehaviorParam("PivotLagSpeed_X"),
-	GetCameraBehaviorParam("PivotLagSpeed_Y)"),
+	GetCameraBehaviorParam("PivotLagSpeed_Y"),
 	GetCameraBehaviorParam("PivotLagSpeed_Z"));
 	FVector pivotLocation = CalcAxisIndependentLag(SmoothedPivotTarget.GetLocation(), pivotTarget.GetLocation(), TargetCameraRotation, LagSpeed);
 	SmoothedPivotTarget = FTransform(pivotTarget.GetRotation(), pivotLocation, FVector(1.0f));
