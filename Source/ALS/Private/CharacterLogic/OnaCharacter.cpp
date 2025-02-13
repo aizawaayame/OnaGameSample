@@ -28,7 +28,7 @@ void AOnaCharacter::BeginPlay()
 	{
 		MainAnimInstance = mesh->GetAnimInstance();
 	}
-	
+
 }
 
 // Called every frame

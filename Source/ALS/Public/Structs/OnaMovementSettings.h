@@ -3,8 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Curves/CurveVector.h"
-#include "Engine/UserDefinedStruct.h"
 #include "OnaMovementSettings.generated.h"
 
 
