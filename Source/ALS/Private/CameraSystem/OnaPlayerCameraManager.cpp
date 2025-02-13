@@ -15,6 +15,8 @@ AOnaPlayerCameraManager::AOnaPlayerCameraManager()
 }
 
 
+
+
 /**
  * Set ControlledPawn and CameraBehaviorComponent's PlayerController and CameraBehaviorComponent's Pawn
  * @param Pawn 
@@ -36,7 +38,7 @@ void AOnaPlayerCameraManager::OnPossess(APawn* Pawn)
  * @param rotation 
  * @param fov 
  */
-void AOnaPlayerCameraManager::CustomCameraBehavior(UPARAM(ref) FVector& location, UPARAM(ref) FRotator& rotation, UPARAM(ref) float fov)
+void AOnaPlayerCameraManager::CustomCameraBehavior(FVector& location, FRotator& rotation, float& fov)
 {
 	// 前置校验
 	if (!ControlledPawn || !GetWorld()) return;

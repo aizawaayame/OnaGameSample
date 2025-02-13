@@ -16,7 +16,7 @@ class ALS_API AOnaPlayerCameraManager : public APlayerCameraManager
 public:
 	AOnaPlayerCameraManager();
 public:
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 	TObjectPtr<USkeletalMeshComponent> CameraBehaviorComponent;
 	
 public:
@@ -55,7 +55,7 @@ public:
 	
 protected:
 	UFUNCTION(BlueprintCallable)
-	void CustomCameraBehavior(UPARAM(ref) FVector& location, UPARAM(ref) FRotator& rotation, UPARAM(ref) float fov);
+	void CustomCameraBehavior(FVector& location, FRotator& rotation, float& fov);
 
 protected:
 
