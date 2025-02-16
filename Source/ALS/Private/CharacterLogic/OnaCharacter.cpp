@@ -3,6 +3,8 @@
 
 #include "CharacterLogic/OnaCharacter.h"
 
+#include "Structs/OnaMovementSettings_State.h"
+
 // Sets default values
 AOnaCharacter::AOnaCharacter()
 {
@@ -29,6 +31,7 @@ void AOnaCharacter::BeginPlay()
 		MainAnimInstance = mesh->GetAnimInstance();
 	}
 
+	SetMovementModel();
 }
 
 // Called every frame
@@ -43,5 +46,16 @@ void AOnaCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+void AOnaCharacter::SetMovementModel()
+{
+	FName rowName = MovementModel.RowName;
+	const UDataTable* dataTable = MovementModel.DataTable;
+	const FString ContextString = FString::Printf(TEXT("Find Row: %s"), *rowName.ToString());
+	if (auto outRow = dataTable->FindRow<FOnaMovementSettings_State>(rowName, ContextString))
+	{
+		MovementSettingsState = *outRow;
+	}
 }
 

@@ -4,8 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Structs/OnaMovementSettings.h"
+#include "Structs/OnaMovementSettings_State.h"
 #include "OnaCharacter.generated.h"
 
+enum class EOnaOverlayState : uint8;
+enum class EOnaViewMode : uint8;
+enum class EOnaMovementAction : uint8;
+enum class EOnaMovementState : uint8;
+class UOnaMovementDataTable;
 enum class EOnaStance : uint8;
 enum class EOnaGait : uint8;
 enum class EOnaRotationMode : uint8;
@@ -33,6 +40,8 @@ public:
 	
 protected:
 
+#pragma region Properties
+	
 #pragma region Components
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TObjectPtr<UTimelineComponent> MantleTimeline;
@@ -77,7 +86,7 @@ protected:
 	FVector Acceleration;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	bool isMoving;
+	bool IsMoving;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	bool HasMovementInput;
@@ -97,12 +106,85 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	float AimYawRate;
 #pragma endregion
+
+#pragma region State Value
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	EOnaMovementState MovementState;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	EOnaMovementState PrevMovementState;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	EOnaMovementAction MovementAction;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	EOnaRotationMode RotationMode;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	EOnaGait Gait;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	EOnaStance Stance;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	EOnaViewMode ViewMode;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
+	EOnaOverlayState OverlayState;	
+#pragma endregion
 	
 #pragma region Movement System
-	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FDataTableRowHandle MovementModel;
 
+	/*
+	 * init in BeginPlay
+	 */
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	FOnaMovementSettings_State MovementSettingsState;
+	
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	FOnaMovementSettings CurrentMovementSettings;
+#pragma endregion
+
+#pragma endregion
+
+#pragma region Internal Functions
+	
+#pragma region Movement System
+	/**
+	 * Get movement data from the Movement Model Data table and set the Movement Data Struct. This allows you to easily switch out movement behaviors.
+	 */
+	UFUNCTION()
+	void SetMovementModel();
+#pragma endregion
+
+#pragma region State Changes
+
+	UFUNCTION()
+	void OnStanceChanged(EOnaStance newStance)
+	{
+		EOnaStance preStance;
+		SetPreviewsAndNewValue(newStance, Stance, preStance);
+	}
+
+	UFUNCTION()
+	void OnRotationModeChanged(EOnaRotationMode newRotationMode)
+	{
+		EOnaRotationMode preRotationMode;
+		SetPreviewsAndNewValue(newRotationMode, RotationMode, preRotationMode);
+	}
 #pragma endregion
 	
+#pragma region Utilities
+	template <class T>
+	FORCEINLINE static void SetPreviewsAndNewValue(T& newValue, T& newTarget, T& previousTarget)
+	{
+		previousTarget = newTarget;
+		newTarget = newValue;
+	}
+	
+#pragma endregion
+	
+#pragma endregion 
 };

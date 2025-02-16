@@ -27,8 +27,8 @@ void AOnaPlayerCameraManager::OnPossess(APawn* Pawn)
 	UAnimInstance* AnimInstance = CameraBehaviorComponent->GetAnimInstance();
 	if (UOnaPlayerCameraBehavior* CameraBehavior = Cast<UOnaPlayerCameraBehavior>(AnimInstance))
 	{
-		CameraBehavior->PlayerController = GetOwningPlayerController();
-		CameraBehavior->Pawn = Pawn;
+		// CameraBehavior->PlayerController = GetOwningPlayerController();
+		// CameraBehavior->Pawn = Pawn;
 	}
 }
 
