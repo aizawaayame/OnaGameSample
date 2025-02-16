@@ -11,7 +11,7 @@
 USTRUCT(BlueprintType)
 struct FOnaMovementSettings_State
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FOnaMovementSettings_Stance VelocityDirection;

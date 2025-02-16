@@ -9,4 +9,5 @@ class ALS_API AOnaCharacterBase : public ACharacter
 {
 	GENERATED_BODY()
 public:
+	
 };

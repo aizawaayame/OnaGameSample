@@ -9,7 +9,7 @@
 USTRUCT(BlueprintType)
 struct FOnaMovementSettings_Stance
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FOnaMovementSettings Standing;
