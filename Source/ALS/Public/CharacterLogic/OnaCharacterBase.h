@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "CoreMinimal.h"
+#include "Enums/OnaMovementState.h"
 #include "GameFramework/Character.h"
 #include "OnaCharacterBase.generated.h"
 
@@ -9,5 +10,45 @@ class ALS_API AOnaCharacterBase : public ACharacter
 {
 	GENERATED_BODY()
 public:
+	AOnaCharacterBase(const FObjectInitializer& ObjectInitializer);
 	
+#pragma region Funcs
+#pragma region Input
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Input")
+	void ForwardMovementAction(float Value);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Input")
+	void RightMovementAction(float Value);
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Input")
+	void CameraUpAction(float Value);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Input")
+	void CameraRightAction(float Value);
+#pragma endregion
+#pragma endregion 
+
+protected:
+	
+#pragma region Props
+#pragma region Input
+	UPROPERTY(EditDefaultsOnly, Category = "Input", BlueprintReadOnly)
+	float LookUpDownRate = 1.25f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input", BlueprintReadOnly)
+	float LookLeftRightRate = 1.25f;
+	
+#pragma endregion 
+#pragma region State Values
+	UPROPERTY(BlueprintReadOnly, Category = "State Values")
+	EOnaMovementState MovementState = EOnaMovementState::None;
+
+	UPROPERTY(BlueprintReadOnly, Category = "State Values")
+	EOnaMovementState PrevMovementState = EOnaMovementState::None;
+#pragma endregion
+
+	/* Smooth out aiming by interping control rotation*/
+	FRotator AimingRotation = FRotator::ZeroRotator;
+#pragma endregion 
 };

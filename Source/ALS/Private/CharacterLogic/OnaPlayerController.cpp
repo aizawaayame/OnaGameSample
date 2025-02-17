@@ -117,7 +117,7 @@ void AOnaPlayerController::ForwardMovementAction(const FInputActionValue& Value)
 {
 	if (PossessedCharacter)
 	{
-		// PossessedCharacter->ForwardMovementAction(Value.GetMagnitude());
+		PossessedCharacter->ForwardMovementAction(Value.GetMagnitude());
 	}
 }
 
@@ -125,7 +125,7 @@ void AOnaPlayerController::RightMovementAction(const FInputActionValue& Value)
 {
 	if (PossessedCharacter)
 	{
-		// PossessedCharacter->RightMovementAction(Value.GetMagnitude());
+		PossessedCharacter->RightMovementAction(Value.GetMagnitude());
 	}
 }
 
@@ -133,7 +133,7 @@ void AOnaPlayerController::CameraUpAction(const FInputActionValue& Value)
 {
 	if (PossessedCharacter)
 	{
-		// PossessedCharacter->CameraUpAction(Value.GetMagnitude());
+		PossessedCharacter->CameraUpAction(Value.GetMagnitude());
 	}
 }
 
@@ -141,7 +141,7 @@ void AOnaPlayerController::CameraRightAction(const FInputActionValue& Value)
 {
 	if (PossessedCharacter)
 	{
-		// PossessedCharacter->CameraRightAction(Value.GetMagnitude());
+		PossessedCharacter->CameraRightAction(Value.GetMagnitude());
 	}
 }
 
