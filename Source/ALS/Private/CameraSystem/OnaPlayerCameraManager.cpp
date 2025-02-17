@@ -3,210 +3,231 @@
 
 #include "CameraSystem/OnaPlayerCameraManager.h"
 #include "CameraSystem/OnaPlayerCameraBehavior.h"
+#include "CharacterLogic/OnaCharacterBase.h"
+#include "CharacterLogic/OnaCharacterDebugComponent.h"
 #include "Interfaces/CameraInterface.h"
 #include "Interfaces/ControllerInterface.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
+const FName NAME_CameraBehavior(TEXT("CameraBehavior"));
+const FName NAME_CameraOffset_X(TEXT("CameraOffset_X"));
+const FName NAME_CameraOffset_Y(TEXT("CameraOffset_Y"));
+const FName NAME_CameraOffset_Z(TEXT("CameraOffset_Z"));
+const FName NAME_Override_Debug(TEXT("Override_Debug"));
+const FName NAME_PivotLagSpeed_X(TEXT("PivotLagSpeed_X"));
+const FName NAME_PivotLagSpeed_Y(TEXT("PivotLagSpeed_Y"));
+const FName NAME_PivotLagSpeed_Z(TEXT("PivotLagSpeed_Z"));
+const FName NAME_PivotOffset_X(TEXT("PivotOffset_X"));
+const FName NAME_PivotOffset_Y(TEXT("PivotOffset_Y"));
+const FName NAME_PivotOffset_Z(TEXT("PivotOffset_Z"));
+const FName NAME_RotationLagSpeed(TEXT("RotationLagSpeed"));
+const FName NAME_Weight_FirstPerson(TEXT("Weight_FirstPerson"));
 
 AOnaPlayerCameraManager::AOnaPlayerCameraManager()
 {
-	CameraBehaviorComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CameraBehavior"));
-	CameraBehaviorComponent->SetupAttachment(GetRootComponent());
+	CameraBehavior = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CameraBehavior"));
+	CameraBehavior->SetupAttachment(GetRootComponent());
+	CameraBehavior->bHiddenInGame = true;
 }
-
-
-
 
 /**
  * Set ControlledPawn and CameraBehaviorComponent's PlayerController and CameraBehaviorComponent's Pawn
  * @param Pawn 
  */
-void AOnaPlayerCameraManager::OnPossess(APawn* Pawn)
+void AOnaPlayerCameraManager::OnPossess(AOnaCharacterBase* NewCharacter)
 {
-	ControlledPawn = Pawn;
-	UAnimInstance* AnimInstance = CameraBehaviorComponent->GetAnimInstance();
-	if (UOnaPlayerCameraBehavior* CameraBehavior = Cast<UOnaPlayerCameraBehavior>(AnimInstance))
+	check(NewCharacter);
+	ControlledCharacter = NewCharacter;
+	UOnaPlayerCameraBehavior* CastedBehv = Cast<UOnaPlayerCameraBehavior>(CameraBehavior->GetAnimInstance());
+	if (CastedBehv)
 	{
-		// CameraBehavior->PlayerController = GetOwningPlayerController();
-		// CameraBehavior->Pawn = Pawn;
+		// NewCharacter->SetCameraBehavior(CastedBehv);
+		// CastedBehv->MovementState = NewCharacter->GetMovementState();
+		// CastedBehv->MovementAction = NewCharacter->GetMovementAction();
+		// CastedBehv->bRightShoulder = NewCharacter->IsRightShoulder();
+		// CastedBehv->Gait = NewCharacter->GetGait();
+		// CastedBehv->SetRotationMode(NewCharacter->GetRotationMode());
+		// CastedBehv->Stance = NewCharacter->GetStance();
+		// CastedBehv->ViewMode = NewCharacter->GetViewMode();
 	}
+
+	const FVector& TPSLoc = ControlledCharacter->GetThirdPersonPivotTarget().GetLocation();
+	SetActorLocation(TPSLoc);
+	SmoothedPivotTarget.SetLocation(TPSLoc);
+
+	DebugComponent = ControlledCharacter->FindComponentByClass<UOnaCharacterDebugComponent>();
 }
 
-/**
- * Custom Camera Behavior
- * @param location 
- * @param rotation 
- * @param fov 
- */
-void AOnaPlayerCameraManager::CustomCameraBehavior(FVector& location, FRotator& rotation, float& fov)
+float AOnaPlayerCameraManager::GetCameraBehaviorParam(FName CurveName) const
 {
-	// 前置校验
-	if (!ControlledPawn || !GetWorld()) return;
-
-	APlayerController* playerController = GetOwningPlayerController();
-	/**
-	 * Get Camera Parameters from CharacterBP via the Camera Interface
-	 * Get local variables  PivotTarget, and FPTarget, TPFOV, FPFOV
-	 * 从Controlled Pawn通过Camera Interface获取相机参数, pivotTargetTransform, fpTargetLocation, tpFOV, fpFOV
-	 */
-	FTransform pivotTargetTransform = FTransform::Identity;
-	FVector fpTargetLocation = FVector::ZeroVector;
-	float tpFOV = 0.0f;
-	float fpFOV = 0.0f;
-	bool isRightShoulder = false;
-	FVector traceOrigin = FVector::ZeroVector;
-	float traceRadius = 0.0f;
-	ETraceTypeQuery traceChannel = ETraceTypeQuery::TraceTypeQuery1;
-	
-	if (ControlledPawn && ControlledPawn->GetClass()->ImplementsInterface(UCameraInterface::StaticClass()))
+	UAnimInstance* Inst = CameraBehavior->GetAnimInstance();
+	if (Inst)
 	{
-		pivotTargetTransform = ICameraInterface::Execute_GetTPPivotTargetTransform(ControlledPawn);
-		fpTargetLocation = ICameraInterface::Execute_GetFPCameraTargetLocation(ControlledPawn);
-		ICameraInterface::Execute_GetCameraParameters(ControlledPawn, tpFOV, fpFOV, isRightShoulder);
-		
-		TEnumAsByte<ETraceTypeQuery> traceChannelByte;
-		ICameraInterface::Execute_GetTPTraceParams(ControlledPawn, traceOrigin, traceRadius, traceChannelByte);
-		traceChannel = traceChannelByte.GetValue();
+		return Inst->GetCurveValue(CurveName);
 	}
+	return 0.f;
+}
 
-	/**
-	 * Calculate Target Camera Rotation. Use the Control Rotation and interpolate for smooth camera rotation.
-	 * Calc TargetCameraRotation
-	 */
-	FRotator controlRotation = playerController->GetControlRotation();
-	FRotator cameraRotation = GetCameraRotation();
-	float rotationLagSpeed = GetCameraBehaviorParam("RotationLagSpeed");
-	float deltaTime = GetWorld()->GetDeltaSeconds();
-	
-	// 原始旋转插值（未考虑最短路径）, 当旋转角度超过180度时可能出现翻转
-	FRotator targetCameraRotation = FMath::RInterpTo(cameraRotation, controlRotation, deltaTime, rotationLagSpeed);
-
-	float overrideDebug = GetCameraBehaviorParam("OverrideDebug");
-	TargetCameraRotation = FMath::Lerp(targetCameraRotation, DebugViewRotation, overrideDebug);
-
-	/**
-	 * Calculate the Smoothed Pivot Target (Orange Sphere). Get the 3P Pivot Target (Green Sphere) and interpolate using axis independent lag for maximum control.
-	 * Calc SmoothedPivotTarget
-	 */
-	FVector LagSpeed = FVector(
-	GetCameraBehaviorParam("PivotLagSpeed_X"),
-	GetCameraBehaviorParam("PivotLagSpeed_Y"),
-	GetCameraBehaviorParam("PivotLagSpeed_Z"));
-	FVector pivotLocation = CalcAxisIndependentLag(SmoothedPivotTarget.GetLocation(), pivotTargetTransform.GetLocation(), TargetCameraRotation, LagSpeed);
-	SmoothedPivotTarget = FTransform(pivotTargetTransform.GetRotation(), pivotLocation, FVector(1.0f));
-
-	/**
-	 * Calculate Pivot Location (BlueSphere). Get the Smoothed Pivot Target and apply local offsets for further camera control.
-	 * Calc PivotLocation
-	 */
-	float pivotOffset_X = GetCameraBehaviorParam("PivotOffset_X");
-	float pivotOffset_Y = GetCameraBehaviorParam("PivotOffset_Y");
-	float pivotOffset_Z = GetCameraBehaviorParam("PivotOffset_Z");
-	PivotLocation = SmoothedPivotTarget.GetLocation() +
-		SmoothedPivotTarget.GetRotation().GetForwardVector() * pivotOffset_X +
-		SmoothedPivotTarget.GetRotation().GetRightVector() * pivotOffset_Y +
-		SmoothedPivotTarget.GetRotation().GetUpVector() * pivotOffset_Z;
-
-	/**
-	 * Calculate Target Camera Location. Get the Pivot location and apply camera relative offsets.
-	 * Calc TargetCameraLocation
-	 */
-	float cameraOffset_X = GetCameraBehaviorParam("CameraOffset_X");
-	float cameraOffset_Y = GetCameraBehaviorParam("CameraOffset_Y");
-	float cameraOffset_Z = GetCameraBehaviorParam("CameraOffset_Z");
-	FVector unlerpedCameraLocation = PivotLocation +
-		TargetCameraRotation.Quaternion().GetForwardVector() * cameraOffset_X +
-		TargetCameraRotation.Quaternion().GetRightVector() * cameraOffset_Y +
-		TargetCameraRotation.Quaternion().GetUpVector() * cameraOffset_Z;
-	FVector unlerpedDebugCameraLocation = pivotTargetTransform.GetLocation() + DebugViewOffset;
-	TargetCameraLocation = FMath::Lerp(unlerpedCameraLocation, unlerpedDebugCameraLocation, overrideDebug);
-
-	/**
-	 * Trace for an object between the camera and character to apply a corrective offset. Trace origins are set within the Character BP via the Camera Interface. Functions like the normal spring arm, but can allow for different trace origins regardless of the pivot. 
-	 */
-	FHitResult hitResult;
-	UKismetSystemLibrary::SphereTraceSingle(
-		GetWorld(),
-		traceOrigin,
-		TargetCameraLocation,
-		traceRadius,
-		traceChannel,
-		false,
-		TArray<AActor*>(),
-		EDrawDebugTrace::ForOneFrame,
-		hitResult,
-		true);
-	if (hitResult.bBlockingHit && !hitResult.bStartPenetrating)
+void AOnaPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& OutVT, float DeltaTime)
+{
+	if (OutVT.Target)
 	{
-		FVector hitLocation = hitResult.Location;
-		FVector traceEnd = hitResult.TraceEnd;
-		TargetCameraLocation = TargetCameraLocation + (hitLocation - traceEnd);
-	}
+		FVector OutLocation;
+		FRotator OutRotation;
+		float OutFOV;
 
-	/**
-	 * Draw Debug Shapes.
-	 */
-	if (playerController && playerController->GetClass()->ImplementsInterface(UControllerInterface::StaticClass()))
-	{
-		ACharacter* debugFocusCharacter = nullptr;
-		bool debugView = false;
-		bool showHUD = false;
-		bool showTraces = false;
-		bool showDebugShapes = false;
-		bool showLayerColors = false;
-		bool slomo = false;
-		bool showCharacterInfo = false;
-		IControllerInterface::Execute_GetDebugInfo(playerController, debugFocusCharacter, debugView, showHUD, showTraces, showDebugShapes, showLayerColors, slomo, showCharacterInfo);
-		if (showDebugShapes)
+		if (OutVT.Target->IsA<AOnaCharacterBase>())
 		{
-			DrawDebugSphere(GetWorld(), pivotTargetTransform.GetLocation(), 16.0f, 8, FColor::Green, false, 0.0f, 0, 0.5f);
-			DrawDebugSphere(GetWorld(), SmoothedPivotTarget.GetLocation(), 16.0f, 8, FColor::Orange, false, 0.0f, 0, 0.5f);
-			DrawDebugSphere(GetWorld(), PivotLocation, 16.0f, 8, FColor::Blue, false, 0.0f, 0, 0.5f);
-			DrawDebugLine(GetWorld(), SmoothedPivotTarget.GetLocation(), pivotTargetTransform.GetLocation(), FColor::Orange, false, 0.0f, 0, 1.f);
-			DrawDebugLine(GetWorld(), PivotLocation, SmoothedPivotTarget.GetLocation(), FColor::Blue, false, 0.0f, 0, 1.f);
+			if (CustomCameraBehavior(DeltaTime, OutLocation, OutRotation, OutFOV))
+			{
+				OutVT.POV.Location = OutLocation;
+				OutVT.POV.Rotation = OutRotation;
+				OutVT.POV.FOV = OutFOV;
+			}
+			else
+			{
+				OutVT.Target->CalcCamera(DeltaTime, OutVT.POV);
+			}
 		}
+		else
+		{
+			OutVT.Target->CalcCamera(DeltaTime, OutVT.POV);
+		}	
 	}
-
-	/**
-	 * Lerp First Person Override and return target camera parameters.
-	 */
-	FTransform targetCameraTransform = FTransform(TargetCameraRotation.Quaternion(), TargetCameraLocation);
-	FTransform targetFirstPersonTransform= FTransform(TargetCameraRotation.Quaternion(), fpTargetLocation);
-	float weight_FirstPerson = GetCameraBehaviorParam("Weight_FirstPerson");
-	FTransform lerpedCameraTransform = FTransform();
-	lerpedCameraTransform.Blend(targetCameraTransform, targetFirstPersonTransform,1.f - weight_FirstPerson);
-	
-	
-	FTransform debugCameraTransform = FTransform(DebugViewRotation, TargetCameraLocation);
-	FTransform lerpedDebugTransform = FTransform();
-	lerpedDebugTransform.Blend(lerpedCameraTransform, debugCameraTransform,1.f - overrideDebug);
-
-	location = lerpedDebugTransform.GetLocation();
-	rotation = lerpedDebugTransform.Rotator();
-	fov = FMath::Lerp(tpFOV, fpFOV, weight_FirstPerson);
 }
 
-FVector AOnaPlayerCameraManager::CalcAxisIndependentLag(const FVector& currentLocation, const FVector& targetLocation, const FRotator& cameraRotation, const FVector lagSpeeds)
+bool AOnaPlayerCameraManager::CustomCameraBehavior(float DeltaTime, FVector& Location, FRotator& Rotation, float& FOV)
 {
-	FRotator cameraRotYaw = FRotator(0.0f, cameraRotation.Yaw, 0.0f);
-	FVector unrotatedCurrentLocation = cameraRotYaw.UnrotateVector(currentLocation);
-	FVector unrotatedTargetLocation = cameraRotYaw.UnrotateVector(targetLocation);
-	float deltaSecond = GetWorld()->GetDeltaSeconds();
-
-	FVector resultLocation = FVector(
-		FMath::FInterpTo(unrotatedCurrentLocation.X, unrotatedTargetLocation.X, deltaSecond, lagSpeeds.X),
-		FMath::FInterpTo(unrotatedCurrentLocation.Y, unrotatedTargetLocation.Y, deltaSecond, lagSpeeds.Y),
-		FMath::FInterpTo(unrotatedCurrentLocation.Z, unrotatedTargetLocation.Z, deltaSecond, lagSpeeds.Z));
-
-	FVector rotatedResultLocation = cameraRotYaw.RotateVector(resultLocation);
-	return rotatedResultLocation;
-}
-
-float AOnaPlayerCameraManager::GetCameraBehaviorParam(FName curveName)
-{
-	if (const UAnimInstance* animInstance = CameraBehaviorComponent->GetAnimInstance())
+	if (!ControlledCharacter)
 	{
-		return animInstance->GetCurveValue(curveName);
+		return false;
 	}
-	return 0.0f;
+
+	// Step 1: Get Camera Parameters from CharacterBP via the Camera Interface
+	const FTransform& PivotTarget = ControlledCharacter->GetThirdPersonPivotTarget();
+	const FVector& FPTarget = ControlledCharacter->GetFirstPersonCameraTarget();
+	float TPFOV = 90.0f;
+	float FPFOV = 90.0f;
+	bool bRightShoulder = false;
+	ControlledCharacter->GetCameraParameters(TPFOV, FPFOV, bRightShoulder);
+
+	// Step 2: Calculate Target Camera Rotation. Use the Control Rotation and interpolate for smooth camera rotation.
+	const FRotator& InterpResult = FMath::RInterpTo(GetCameraRotation(),
+	                                                GetOwningPlayerController()->GetControlRotation(), DeltaTime,
+	                                                GetCameraBehaviorParam(NAME_RotationLagSpeed));
+
+	TargetCameraRotation = UKismetMathLibrary::RLerp(InterpResult, DebugViewRotation,
+	                                                 GetCameraBehaviorParam(TEXT("Override_Debug")), true);
+
+	// Step 3: Calculate the Smoothed Pivot Target (Orange Sphere).
+	// Get the 3P Pivot Target (Green Sphere) and interpolate using axis independent lag for maximum control.
+	const FVector LagSpd(GetCameraBehaviorParam(NAME_PivotLagSpeed_X),
+	                     GetCameraBehaviorParam(NAME_PivotLagSpeed_Y),
+	                     GetCameraBehaviorParam(NAME_PivotLagSpeed_Z));
+
+	const FVector& AxisIndpLag = CalculateAxisIndependentLag(SmoothedPivotTarget.GetLocation(),
+	                                                         PivotTarget.GetLocation(), TargetCameraRotation, LagSpd,
+	                                                         DeltaTime);
+
+	SmoothedPivotTarget.SetRotation(PivotTarget.GetRotation());
+	SmoothedPivotTarget.SetLocation(AxisIndpLag);
+	SmoothedPivotTarget.SetScale3D(FVector::OneVector);
+
+	// Step 4: Calculate Pivot Location (BlueSphere). Get the Smoothed
+	// Pivot Target and apply local offsets for further camera control.
+	PivotLocation =
+		SmoothedPivotTarget.GetLocation() +
+		UKismetMathLibrary::GetForwardVector(SmoothedPivotTarget.Rotator()) * GetCameraBehaviorParam(
+			NAME_PivotOffset_X) +
+		UKismetMathLibrary::GetRightVector(SmoothedPivotTarget.Rotator()) * GetCameraBehaviorParam(
+			NAME_PivotOffset_Y) +
+		UKismetMathLibrary::GetUpVector(SmoothedPivotTarget.Rotator()) * GetCameraBehaviorParam(
+			NAME_PivotOffset_Z);
+
+	// Step 5: Calculate Target Camera Location. Get the Pivot location and apply camera relative offsets.
+	TargetCameraLocation = UKismetMathLibrary::VLerp(
+		PivotLocation +
+		UKismetMathLibrary::GetForwardVector(TargetCameraRotation) * GetCameraBehaviorParam(
+			NAME_CameraOffset_X) +
+		UKismetMathLibrary::GetRightVector(TargetCameraRotation) * GetCameraBehaviorParam(NAME_CameraOffset_Y)
+		+
+		UKismetMathLibrary::GetUpVector(TargetCameraRotation) * GetCameraBehaviorParam(NAME_CameraOffset_Z),
+		PivotTarget.GetLocation() + DebugViewOffset,
+		GetCameraBehaviorParam(NAME_Override_Debug));
+
+	// Step 6: Trace for an object between the camera and character to apply a corrective offset.
+	// Trace origins are set within the Character BP via the Camera Interface.
+	// Functions like the normal spring arm, but can allow for different trace origins regardless of the pivot
+	FVector TraceOrigin;
+	float TraceRadius;
+	ECollisionChannel TraceChannel = ControlledCharacter->GetThirdPersonTraceParams(TraceOrigin, TraceRadius);
+
+	UWorld* World = GetWorld();
+	check(World);
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	Params.AddIgnoredActor(ControlledCharacter);
+
+	FHitResult HitResult;
+	const FCollisionShape SphereCollisionShape = FCollisionShape::MakeSphere(TraceRadius);
+	const bool bHit = World->SweepSingleByChannel(HitResult, TraceOrigin, TargetCameraLocation, FQuat::Identity,
+	                                              TraceChannel, SphereCollisionShape, Params);
+
+	// TODO
+	// if (ALSDebugComponent && ALSDebugComponent->GetShowTraces())
+	// {
+	// 	UALSDebugComponent::DrawDebugSphereTraceSingle(World,
+	// 	                                               TraceOrigin,
+	// 	                                               TargetCameraLocation,
+	// 	                                               SphereCollisionShape,
+	// 	                                               EDrawDebugTrace::Type::ForOneFrame,
+	// 	                                               bHit,
+	// 	                                               HitResult,
+	// 	                                               FLinearColor::Red,
+	// 	                                               FLinearColor::Green,
+	// 	                                               5.0f);
+	// }
+
+	if (HitResult.IsValidBlockingHit())
+	{
+		TargetCameraLocation += HitResult.Location - HitResult.TraceEnd;
+	}
+
+	// Step 8: Lerp First Person Override and return target camera parameters.
+	FTransform TargetCameraTransform(TargetCameraRotation, TargetCameraLocation, FVector::OneVector);
+	FTransform FPTargetCameraTransform(TargetCameraRotation, FPTarget, FVector::OneVector);
+
+	const FTransform& MixedTransform = UKismetMathLibrary::TLerp(TargetCameraTransform, FPTargetCameraTransform,
+	                                                             GetCameraBehaviorParam(
+		                                                             NAME_Weight_FirstPerson));
+
+	const FTransform& TargetTransform = UKismetMathLibrary::TLerp(MixedTransform,
+	                                                              FTransform(DebugViewRotation, TargetCameraLocation,
+	                                                                         FVector::OneVector),
+	                                                              GetCameraBehaviorParam(
+		                                                              NAME_Override_Debug));
+
+	Location = TargetTransform.GetLocation();
+	Rotation = TargetTransform.Rotator();
+	FOV = FMath::Lerp(TPFOV, FPFOV, GetCameraBehaviorParam(NAME_Weight_FirstPerson));
+
+	return true;
 }
+
+FVector AOnaPlayerCameraManager::CalculateAxisIndependentLag(FVector CurrentLocation, FVector TargetLocation, FRotator CameraRotation, FVector LagSpeeds, float DeltaTime)
+{
+	CameraRotation.Roll = 0.0f;
+	CameraRotation.Pitch = 0.0f;
+	const FVector UnrotatedCurLoc = CameraRotation.UnrotateVector(CurrentLocation);
+	const FVector UnrotatedTargetLoc = CameraRotation.UnrotateVector(TargetLocation);
+
+	const FVector ResultVector(
+		FMath::FInterpTo(UnrotatedCurLoc.X, UnrotatedTargetLoc.X, DeltaTime, LagSpeeds.X),
+		FMath::FInterpTo(UnrotatedCurLoc.Y, UnrotatedTargetLoc.Y, DeltaTime, LagSpeeds.Y),
+		FMath::FInterpTo(UnrotatedCurLoc.Z, UnrotatedTargetLoc.Z, DeltaTime, LagSpeeds.Z));
+
+	return CameraRotation.RotateVector(ResultVector);
+}
+

@@ -6,6 +6,8 @@
 #include "Camera/PlayerCameraManager.h"
 #include "OnaPlayerCameraManager.generated.h"
 
+class UOnaCharacterDebugComponent;
+class AOnaCharacterBase;
 /**
  * 
  */
@@ -16,53 +18,56 @@ class ALS_API AOnaPlayerCameraManager : public APlayerCameraManager
 public:
 	AOnaPlayerCameraManager();
 public:
-	UPROPERTY(BlueprintReadOnly, EditAnywhere)
-	TObjectPtr<USkeletalMeshComponent> CameraBehaviorComponent;
+	UFUNCTION(BlueprintCallable,  Category = "Camera")
+	void OnPossess(AOnaCharacterBase* NewCharacter);
+
+	UFUNCTION(BlueprintCallable, Category = "Camera")
+	float GetCameraBehaviorParam(FName CurveName) const;
+protected:
 	
+	virtual void UpdateViewTargetInternal(FTViewTarget& OutVT, float DeltaTime) override;
+
+	UFUNCTION(BlueprintCallable, Category = "ALS|Camera")
+	bool CustomCameraBehavior(float DeltaTime, FVector& Location, FRotator& Rotation, float& FOV);
+
+#pragma region Props
 public:
 	
-	/**
-	 * Set By OnPossess
-	 */
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
-	TObjectPtr<APawn> ControlledPawn;
-	
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
-	FVector DebugViewOffset;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Camera")
+	TObjectPtr<AOnaCharacterBase> ControlledCharacter = nullptr;
 
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
-	FRotator DebugViewRotation;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Camera")
+	TObjectPtr<USkeletalMeshComponent> CameraBehavior = nullptr;
 
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	FVector RootLocation;
 
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
-	FVector PivotLocation;
-	
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	FTransform SmoothedPivotTarget;
 
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
+	FVector PivotLocation;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	FVector TargetCameraLocation;
 
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	FRotator TargetCameraRotation;
-	
-public:
-    
-	UFUNCTION(BlueprintCallable)
-	void OnPossess(APawn* Pawn);
-	
-protected:
-	UFUNCTION(BlueprintCallable)
-	void CustomCameraBehavior(FVector& location, FRotator& rotation, float& fov);
 
-protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Camera")
+	FRotator DebugViewRotation;
 
-	UFUNCTION(BlueprintCallable)
-	FVector CalcAxisIndependentLag(const FVector& currentLocation, const FVector& targetLocation, const FRotator& cameraRotation, const FVector lagSpeeds);
-	
-	UFUNCTION(BlueprintCallable)
-	float GetCameraBehaviorParam(FName curveName);
-	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Camera")
+	FVector DebugViewOffset;
+private:
+	UPROPERTY()
+	TObjectPtr<UOnaCharacterDebugComponent> DebugComponent = nullptr;	
+#pragma endregion
+
+#pragma region Static Funcs
+	UFUNCTION(BlueprintCallable, Category = "Camera")
+	static FVector CalculateAxisIndependentLag(
+		FVector CurrentLocation, FVector TargetLocation, FRotator CameraRotation, FVector LagSpeeds, float DeltaTime);
+#pragma endregion 
 };

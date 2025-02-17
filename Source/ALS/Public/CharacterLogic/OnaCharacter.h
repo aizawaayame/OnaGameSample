@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "OnaCharacterBase.h"
 #include "GameFramework/Character.h"
 #include "Structs/OnaMovementSettings.h"
 #include "Structs/OnaMovementSettings_State.h"
@@ -19,11 +20,10 @@ enum class EOnaRotationMode : uint8;
 class UTimelineComponent;
 
 UCLASS()
-class ALS_API AOnaCharacter : public ACharacter
+class ALS_API AOnaCharacter : public AOnaCharacterBase
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
-	AOnaCharacter();
+	AOnaCharacter(const FObjectInitializer& ObjectInitializer);
 };
