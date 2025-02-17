@@ -18,7 +18,7 @@ public:
 	virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
 	
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category="Debug")
-	void OnPlayerControllerInitialzie(APlayerController* controller);
+	void OnPlayerControllerInitialized(APlayerController* controller);
 
 	/** Implemented on BP to update layering colors */
 	UFUNCTION(BlueprintImplementableEvent, Category = "Debug")
