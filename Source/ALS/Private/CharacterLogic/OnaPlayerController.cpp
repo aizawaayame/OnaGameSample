@@ -18,6 +18,8 @@ void AOnaPlayerController::OnPossess(APawn* InPawn)
 		SetupCamera();
 	}
 
+	SetupInputs();
+	
 	if (!IsValid(PossessedCharacter))
 		return;
 
@@ -69,8 +71,7 @@ void AOnaPlayerController::BindActions(UInputMappingContext* Context)
 	if (Context)
 	{
 		const TArray<FEnhancedActionKeyMapping>& Mappings = Context->GetMappings();
-		UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
-		if (EnhancedInputComponent)
+		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
 		{
 			// 可能有多个键映射分配给一个Action。过滤重复的Action以防止多次委托绑定
 			TSet<const UInputAction*> UniqueActions;
@@ -95,8 +96,7 @@ void AOnaPlayerController::SetupInputs()
 			FModifyContextOptions Options;
 			Options.bForceImmediately = 1;
 			Subsystem->AddMappingContext(DefaultInputMappingContext, 1, Options);
-			UOnaCharacterDebugComponent* DebugComp = Cast<UOnaCharacterDebugComponent>(PossessedCharacter->GetComponentByClass(UOnaCharacterDebugComponent::StaticClass()));
-			if (DebugComp)
+			if (UOnaCharacterDebugComponent* DebugComp = Cast<UOnaCharacterDebugComponent>(PossessedCharacter->GetComponentByClass(UOnaCharacterDebugComponent::StaticClass())))
 			{
 				Subsystem->AddMappingContext(DebugInputMappingContext, 0, Options);
 			}
