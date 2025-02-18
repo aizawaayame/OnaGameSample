@@ -23,6 +23,9 @@ AOnaCharacterBase::AOnaCharacterBase(const FObjectInitializer& ObjectInitializer
 	SetReplicatingMovement(true);
 }
 
+/*
+ * TPPivot采用当前Actor的Transform
+ */
 FTransform AOnaCharacterBase::GetThirdPersonPivotTarget()
 {
 	return GetActorTransform();

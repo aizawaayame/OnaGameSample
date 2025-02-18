@@ -97,14 +97,17 @@ void AOnaPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& OutVT, floa
 	}
 }
 
-bool AOnaPlayerCameraManager::CustomCameraBehavior(float DeltaTime, FVector& Location, FRotator& Rotation, float& FOV)
+bool AOnaPlayerCameraManager::CustomCameraBehavior(float DeltaTime, FVector& LocationOut, FRotator& RotationOut, float& FOVPOut)
 {
 	if (!ControlledCharacter)
 	{
 		return false;
 	}
 
-	// Step 1: Get Camera Parameters from CharacterBP via the Camera Interface
+	/*
+	 * Step 1: 获取角色的第三人称和第一人称的目标位置，视角，是否右肩视角; 其中第三人称目标位置是角色的位置，第一人称目标位置是角色身上的对应Socket的位置
+	 * 从ControlledCharacter上获取FOV和bRightShoulder
+	 */
 	const FTransform& PivotTarget = ControlledCharacter->GetThirdPersonPivotTarget();
 	const FVector& FPTarget = ControlledCharacter->GetFirstPersonCameraTarget();
 	float TPFOV = 90.0f;
@@ -209,9 +212,9 @@ bool AOnaPlayerCameraManager::CustomCameraBehavior(float DeltaTime, FVector& Loc
 	                                                              GetCameraBehaviorParam(
 		                                                              NAME_Override_Debug));
 
-	Location = TargetTransform.GetLocation();
-	Rotation = TargetTransform.Rotator();
-	FOV = FMath::Lerp(TPFOV, FPFOV, GetCameraBehaviorParam(NAME_Weight_FirstPerson));
+	LocationOut = TargetTransform.GetLocation();
+	RotationOut = TargetTransform.Rotator();
+	FOVPOut = FMath::Lerp(TPFOV, FPFOV, GetCameraBehaviorParam(NAME_Weight_FirstPerson));
 
 	return true;
 }

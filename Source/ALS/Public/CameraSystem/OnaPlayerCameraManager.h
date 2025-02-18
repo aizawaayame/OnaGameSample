@@ -28,7 +28,7 @@ protected:
 	virtual void UpdateViewTargetInternal(FTViewTarget& OutVT, float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable, Category = "ALS|Camera")
-	bool CustomCameraBehavior(float DeltaTime, FVector& Location, FRotator& Rotation, float& FOV);
+	bool CustomCameraBehavior(float DeltaTime, FVector& LocationOut, FRotator& RotationOut, float& FOVPOut);
 
 #pragma region Props
 public:
