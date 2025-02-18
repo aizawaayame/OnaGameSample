@@ -1,8 +1,10 @@
 ﻿
 #include "CharacterLogic/OnaCharacterBase.h"
 
+#include "CameraSystem/OnaPlayerCameraBehavior.h"
 #include "CharacterLogic/OnaCharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Net/UnrealNetwork.h"
 
 
 const FName NAME_FP_Camera(TEXT("FP_Camera"));
@@ -21,6 +23,24 @@ AOnaCharacterBase::AOnaCharacterBase(const FObjectInitializer& ObjectInitializer
 	bUseControllerRotationYaw = 0;
 	bReplicates = true;
 	SetReplicatingMovement(true);
+}
+
+void AOnaCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	// DOREPLIFETIME(AOnaCharacterBase, TargetRagdollLocation);
+	// DOREPLIFETIME_CONDITION(AOnaCharacterBase, ReplicatedCurrentAcceleration, COND_SkipOwner);
+	// DOREPLIFETIME_CONDITION(AOnaCharacterBase, ReplicatedControlRotation, COND_SkipOwner);
+	//
+	// DOREPLIFETIME(AOnaCharacterBase, DesiredGait);
+	// DOREPLIFETIME_CONDITION(AOnaCharacterBase, DesiredStance, COND_SkipOwner);
+	// DOREPLIFETIME_CONDITION(AOnaCharacterBase, DesiredRotationMode, COND_SkipOwner);
+
+	DOREPLIFETIME_CONDITION(AOnaCharacterBase, RotationMode, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(AOnaCharacterBase, OverlayState, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(AOnaCharacterBase, ViewMode, COND_SkipOwner);
+	// DOREPLIFETIME_CONDITION(AOnaCharacterBase, VisibleMesh, COND_SkipOwner);
 }
 
 /*
@@ -48,6 +68,66 @@ void AOnaCharacterBase::GetCameraParameters(float& TPFOVOut, float& FPFOVOut, bo
 	TPFOVOut = ThirdPersonFOV;
 	FPFOVOut = FirstPersonFOV;
 	bRightShoulderOut = bRightShoulder;
+}
+
+void AOnaCharacterBase::SetMovementState(EOnaMovementState NewState, bool bForce)
+{
+	if (bForce || MovementState != NewState)
+	{
+		PrevMovementState = MovementState;
+		MovementState = NewState;
+		OnMovementStateChanged(PrevMovementState);
+	}
+}
+
+void AOnaCharacterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
+{
+	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+	if (GetCharacterMovement()->MovementMode == MOVE_Walking ||
+		GetCharacterMovement()->MovementMode == MOVE_NavWalking)
+	{
+		SetMovementState(EOnaMovementState::Grounded);
+	}
+	else if (GetCharacterMovement()->MovementMode == MOVE_Falling)
+	{
+		SetMovementState(EOnaMovementState::InAir);
+	}
+}
+
+void AOnaCharacterBase::OnMovementStateChanged(const EOnaMovementState& PreviousState)
+{
+	if (MovementState == EOnaMovementState::InAir)
+	{
+		if (MovementState == EOnaMovementState::None)
+		{
+			InAirRotation = GetActorRotation();
+			if (Stance == EOnaStance::Crouching)
+			{
+				UnCrouch();
+			}
+		}
+	}
+
+	if (CameraBehavior)
+	{
+		CameraBehavior->MovementState = MovementState;
+	}
+}
+
+void AOnaCharacterBase::OnRep_RotationMode(EOnaRotationMode PrevRotMode)
+{
+}
+
+void AOnaCharacterBase::OnRep_ViewMode(EOnaViewMode PrevViewMode)
+{
+}
+
+void AOnaCharacterBase::OnRep_OverlayState(EOnaOverlayState PrevOverlayState)
+{
+}
+
+void AOnaCharacterBase::OnRep_VisibleMesh(const USkeletalMesh* PreviousSkeletalMesh)
+{
 }
 
 void AOnaCharacterBase::ForwardMovementAction_Implementation(float Value)
