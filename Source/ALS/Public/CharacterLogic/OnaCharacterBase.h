@@ -20,9 +20,34 @@ class ALS_API AOnaCharacterBase : public ACharacter
 public:
 	AOnaCharacterBase(const FObjectInitializer& ObjectInitializer);
 
+	virtual void Tick(float DeltaSeconds) override;
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+	
 #pragma region Funcs
 
+#pragma region Essential Information Getter/Setter
+	UFUNCTION(BlueprintGetter, Category = "Essential Information")
+	FORCEINLINE FVector GetAcceleration() const { return Acceleration; }
+
+	UFUNCTION(BlueprintGetter, Category = "Essential Information")
+	FORCEINLINE bool IsMoving() const { return bIsMoving; }
+
+	UFUNCTION(BlueprintCallable, Category = "Essential Information")
+	FORCEINLINE FVector GetMovementInput() const { return ReplicatedCurrentAcceleration;}
+
+	UFUNCTION(BlueprintGetter, Category = "Essential Information")
+	FORCEINLINE float GetMovementInputAmount() const { return MovementInputAmount; }
+
+	UFUNCTION(BlueprintGetter, Category = "Essential Information")
+	FORCEINLINE float GetSpeed() const { return Speed; }
+
+	UFUNCTION(BlueprintCallable, Category = "Essential Information")
+	FORCEINLINE FRotator GetAimingRotation() const { return AimingRotation; }
+
+	UFUNCTION(BlueprintGetter, Category = "Essential Information")
+	FORCEINLINE float GetAimYawRate() const { return AimYawRate; }
+#pragma endregion
+	
 #pragma region Camera System
 	UFUNCTION(BlueprintCallable, Category = "Camera System")
 	virtual FTransform GetThirdPersonPivotTarget();
@@ -60,6 +85,8 @@ public:
 #pragma region State Changes
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 	virtual void OnMovementStateChanged(const EOnaMovementState& PreviousState);
+	
+	void SetEssentialValues(float DeltaTime);
 #pragma endregion
 
 #pragma region Replication
@@ -74,7 +101,8 @@ public:
 
 	UFUNCTION(Category = "Replication")
 	void OnRep_VisibleMesh(const USkeletalMesh* PreviousSkeletalMesh);
-#pragma endregion 
+#pragma endregion
+
 #pragma endregion 
 
 protected:
@@ -144,11 +172,57 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Rotation System")
 	float YawOffset = 0.0f;
 #pragma endregion
+
+#pragma region Essential Information
+	UPROPERTY(BlueprintReadOnly, Category = "Essential Information")
+	FVector Acceleration = FVector::ZeroVector;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Essential Information")
+	bool bIsMoving = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Essential Information")
+	bool bHasMovementInput = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Essential Information")
+	FRotator LastVelocityRotation;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Essential Information")
+	FRotator LastMovementInputRotation;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Essential Information")
+	float Speed = 0.0f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Essential Information")
+	float MovementInputAmount = 0.0f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Essential Information")
+	float AimYawRate = 0.0f;
+#pragma endregion 
+	
+#pragma region Cached Essential Information
+	/** Cached Variables */
+	FVector PreviousVelocity = FVector::ZeroVector;
+	float PreviousAimYaw = 0.0f;
+#pragma endregion
+	
+#pragma region Replicated Essential Information
+	UPROPERTY(BlueprintReadOnly, Replicated, Category = "Essential Information")
+	FRotator ReplicatedControlRotation = FRotator::ZeroRotator;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Essential Information")
+	float EasedMaxAcceleration = 0.0f;
+
+	UPROPERTY(BlueprintReadOnly, Replicated, Category = "Essential Information")
+	FVector ReplicatedCurrentAcceleration = FVector::ZeroVector;
+#pragma endregion
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Camera")
 	TObjectPtr<UOnaPlayerCameraBehavior> CameraBehavior;
 	
 	/* Smooth out aiming by interping control rotation*/
 	FRotator AimingRotation = FRotator::ZeroRotator;
-#pragma endregion 
+	
+#pragma endregion
+	
 };
+

@@ -25,13 +25,18 @@ AOnaCharacterBase::AOnaCharacterBase(const FObjectInitializer& ObjectInitializer
 	SetReplicatingMovement(true);
 }
 
+void AOnaCharacterBase::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	SetEssentialValues(DeltaSeconds);
+}
+
 void AOnaCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	// DOREPLIFETIME(AOnaCharacterBase, TargetRagdollLocation);
-	// DOREPLIFETIME_CONDITION(AOnaCharacterBase, ReplicatedCurrentAcceleration, COND_SkipOwner);
-	// DOREPLIFETIME_CONDITION(AOnaCharacterBase, ReplicatedControlRotation, COND_SkipOwner);
+	
+	DOREPLIFETIME_CONDITION(AOnaCharacterBase, ReplicatedCurrentAcceleration, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(AOnaCharacterBase, ReplicatedControlRotation, COND_SkipOwner);
 	//
 	// DOREPLIFETIME(AOnaCharacterBase, DesiredGait);
 	// DOREPLIFETIME_CONDITION(AOnaCharacterBase, DesiredStance, COND_SkipOwner);
@@ -112,6 +117,46 @@ void AOnaCharacterBase::OnMovementStateChanged(const EOnaMovementState& Previous
 	{
 		CameraBehavior->MovementState = MovementState;
 	}
+}
+
+void AOnaCharacterBase::SetEssentialValues(float DeltaTime)
+{
+	if (GetLocalRole() == ROLE_SimulatedProxy)
+	{
+		ReplicatedCurrentAcceleration = GetCharacterMovement()->GetCurrentAcceleration();
+		ReplicatedControlRotation = GetControlRotation();
+		EasedMaxAcceleration = GetCharacterMovement()->GetMaxAcceleration();
+	}
+	else
+	{
+		EasedMaxAcceleration = GetCharacterMovement()->GetMaxAcceleration() != 0
+								? GetCharacterMovement()->GetMaxAcceleration()
+								: EasedMaxAcceleration / 2;	
+	}
+
+	// 将 AimingRotation 插值到当前的 ReplicatedControlRotation，以实现平滑的角色旋转移动。减小 InterpSpeed 可以获得更慢但更平滑的移动效果
+	AimingRotation = FMath::RInterpTo(AimingRotation, ReplicatedControlRotation, DeltaTime, 30);
+
+	// 这些值表示胶囊体如何移动以及它想要如何移动，因此对任何数据驱动的动画系统来说都是至关重要的。
+	// 它们也在整个系统的各个功能中使用
+	const FVector CurrentVel = GetVelocity();
+
+	// 通过获取速度来判断角色是否在移动。速度等于水平方向（x y）速度的长度，
+	// 因此不考虑垂直方向的移动。如果角色正在移动，则更新最后的速度旋转值。保存这个值是因为即使在角色停止移动后，
+	// 最后的移动方向可能有用。
+	const FVector NewAcceleration = (CurrentVel - PreviousVelocity) / DeltaTime;
+	Acceleration = NewAcceleration.IsNearlyZero() || IsLocallyControlled() ? NewAcceleration : Acceleration / 2;
+
+	Speed = CurrentVel.Size2D();
+	bIsMoving = Speed > 1.f;
+	if (bIsMoving)
+	{
+		LastVelocityRotation = CurrentVel.ToOrientationRotator();
+	}
+
+	// 通过比较当前和前一个瞄准偏航值，除以增量时间来设置瞄准偏航速率。
+	// 这表示摄像机从左到右旋转的速度。
+	AimYawRate =  FMath::Abs((AimingRotation.Yaw - PreviousAimYaw) / DeltaTime);
 }
 
 void AOnaCharacterBase::OnRep_RotationMode(EOnaRotationMode PrevRotMode)
