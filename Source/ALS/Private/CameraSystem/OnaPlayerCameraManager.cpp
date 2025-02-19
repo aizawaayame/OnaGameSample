@@ -1,14 +1,10 @@
 
-
-
 #include "CameraSystem/OnaPlayerCameraManager.h"
 #include "CameraSystem/OnaPlayerCameraBehavior.h"
 #include "CharacterLogic/OnaCharacterBase.h"
 #include "CharacterLogic/OnaCharacterDebugComponent.h"
-#include "Interfaces/CameraInterface.h"
-#include "Interfaces/ControllerInterface.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Kismet/KismetSystemLibrary.h"
+
 
 const FName NAME_CameraBehavior(TEXT("CameraBehavior"));
 const FName NAME_CameraOffset_X(TEXT("CameraOffset_X"));
@@ -32,8 +28,10 @@ AOnaPlayerCameraManager::AOnaPlayerCameraManager()
 }
 
 /**
- * Set ControlledPawn and CameraBehaviorComponent's PlayerController and CameraBehaviorComponent's Pawn
- * @param Pawn 
+ * Set Essential Param
+ * Called by OnaPlayerController::SetCamera,
+ * Which is called by APlayerController::OnPosses in Server or APlayerController::OnRep_Pawn in Client
+ * @param NewCharacter 
  */
 void AOnaPlayerCameraManager::OnPossess(AOnaCharacterBase* NewCharacter)
 {
@@ -59,6 +57,11 @@ void AOnaPlayerCameraManager::OnPossess(AOnaCharacterBase* NewCharacter)
 	DebugComponent = ControlledCharacter->FindComponentByClass<UOnaCharacterDebugComponent>();
 }
 
+/**
+ * \brief  从骨骼曲线中获取数据
+ * \param CurveName Curve Name
+ * \return  
+ */
 float AOnaPlayerCameraManager::GetCameraBehaviorParam(FName CurveName) const
 {
 	UAnimInstance* Inst = CameraBehavior->GetAnimInstance();
@@ -69,34 +72,46 @@ float AOnaPlayerCameraManager::GetCameraBehaviorParam(FName CurveName) const
 	return 0.f;
 }
 
-void AOnaPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& OutVT, float DeltaTime)
+/**
+ * \brief 蓝图的BlueprintUpdateCamera在这个父函数中被调用，
+ * 调用链 UWorld::Tick->APlayerController::UpdateCameraManager->APlayerController::UpdateCameraManager->UpdateCamera->DoUpdateCamera->UpdateViewTarget->UpdateViewTargetInternal
+ * \tparam  
+ * \param VTOut 
+ * \param DeltaTime
+ */
+void AOnaPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& VTOut, float DeltaTime)
 {
-	if (OutVT.Target)
+	if (VTOut.Target)
 	{
-		FVector OutLocation;
-		FRotator OutRotation;
-		float OutFOV;
+		FVector LocationOut;
+		FRotator RotationOut;
+		float FOVOut;
 
-		if (OutVT.Target->IsA<AOnaCharacterBase>())
+		if (VTOut.Target->IsA<AOnaCharacterBase>())
 		{
-			if (CustomCameraBehavior(DeltaTime, OutLocation, OutRotation, OutFOV))
+			if (CustomCameraBehavior(DeltaTime, LocationOut, RotationOut, FOVOut))
 			{
-				OutVT.POV.Location = OutLocation;
-				OutVT.POV.Rotation = OutRotation;
-				OutVT.POV.FOV = OutFOV;
+				VTOut.POV.Location = LocationOut;
+				VTOut.POV.Rotation = RotationOut;
+				VTOut.POV.FOV = FOVOut;
 			}
 			else
 			{
-				OutVT.Target->CalcCamera(DeltaTime, OutVT.POV);
+				VTOut.Target->CalcCamera(DeltaTime, VTOut.POV);
 			}
 		}
 		else
 		{
-			OutVT.Target->CalcCamera(DeltaTime, OutVT.POV);
+			VTOut.Target->CalcCamera(DeltaTime, VTOut.POV);
 		}	
 	}
 }
 
+/**
+ * \brief Called by `UpdateViewTargetInternal` 
+ * \param DeltaTime 
+ * \return  
+ */
 bool AOnaPlayerCameraManager::CustomCameraBehavior(float DeltaTime, FVector& LocationOut, FRotator& RotationOut, float& FOVPOut)
 {
 	if (!ControlledCharacter)
@@ -104,57 +119,73 @@ bool AOnaPlayerCameraManager::CustomCameraBehavior(float DeltaTime, FVector& Loc
 		return false;
 	}
 
+	/* Debug偏移和FP的转换可以看做后处理，计算流程如下
+	 * Input：PivotTarget，FPLocation
+	 *	- PivotTarget当前Character的GetLocation() (见GetThirdPersonPivotTarget函数)
+	 *	- FPLocation当前Character的Mesh插槽(见GetFirstPersonCameraTarget函数)
+	 * Intermediate：TargetCameraLocation，TargetCameraRotation，SmoothedPivotTarget，PivotLocation
+	 * Output：
+	 */
+	
+	/*
+	 * 命名规范：Location和Rotation必须明确命名，Target可以泛指Transform
+	 */
+	
 	/*
 	 * Step 1: 获取角色的第三人称和第一人称的目标位置，视角，是否右肩视角; 其中第三人称目标位置是角色的位置，第一人称目标位置是角色身上的对应Socket的位置
 	 * 从ControlledCharacter上获取FOV和bRightShoulder
 	 */
 	const FTransform& PivotTarget = ControlledCharacter->GetThirdPersonPivotTarget();
-	const FVector& FPTarget = ControlledCharacter->GetFirstPersonCameraTarget();
+	const FVector& FPLocation = ControlledCharacter->GetFirstPersonCameraTarget();
 	float TPFOV = 90.0f;
 	float FPFOV = 90.0f;
 	bool bRightShoulder = false;
 	ControlledCharacter->GetCameraParameters(TPFOV, FPFOV, bRightShoulder);
 
-	// Step 2: Calculate Target Camera Rotation. Use the Control Rotation and interpolate for smooth camera rotation.
+	/*
+	 * Step 2: TargetCameraRotation = CameraRotation到PlayerController::ControlRotation的插值，插值速度由RotationLagSpeed决定;
+	 * 如果Override_Debug为真，则最后还需要根据Override_Debug曲线和DebugViewRotation混合
+	 */
 	const FRotator& InterpResult = FMath::RInterpTo(GetCameraRotation(),
 	                                                GetOwningPlayerController()->GetControlRotation(), DeltaTime,
 	                                                GetCameraBehaviorParam(NAME_RotationLagSpeed));
-
 	TargetCameraRotation = UKismetMathLibrary::RLerp(InterpResult, DebugViewRotation,
 	                                                 GetCameraBehaviorParam(TEXT("Override_Debug")), true);
 
-	// Step 3: Calculate the Smoothed Pivot Target (Orange Sphere).
-	// Get the 3P Pivot Target (Green Sphere) and interpolate using axis independent lag for maximum control.
+	/*
+	 * Step 3: 计算平滑的SmoothedPivotTarget，
+	 * Rotation：PivotTarget(见Step 1)
+	 * Location：SmoothedPivotTarget到PivotTarget的弧形插值，方向延TargetCameraRotation(见Step2)，插值速度由曲线PivotLagSpeed_X, PivotLagSpeed_Y, PivotLagSpeed_Z决定
+	 */
 	const FVector LagSpd(GetCameraBehaviorParam(NAME_PivotLagSpeed_X),
 	                     GetCameraBehaviorParam(NAME_PivotLagSpeed_Y),
 	                     GetCameraBehaviorParam(NAME_PivotLagSpeed_Z));
-
 	const FVector& AxisIndpLag = CalculateAxisIndependentLag(SmoothedPivotTarget.GetLocation(),
 	                                                         PivotTarget.GetLocation(), TargetCameraRotation, LagSpd,
 	                                                         DeltaTime);
-
 	SmoothedPivotTarget.SetRotation(PivotTarget.GetRotation());
 	SmoothedPivotTarget.SetLocation(AxisIndpLag);
 	SmoothedPivotTarget.SetScale3D(FVector::OneVector);
-
-	// Step 4: Calculate Pivot Location (BlueSphere). Get the Smoothed
-	// Pivot Target and apply local offsets for further camera control.
+	
+	/*
+	 * 计算PivotLocation，PivotLocation = SmoothedPivotTarget的位置 + CameraBehavior中的偏移，
+	 * 偏移由CameraOffset_X, CameraOffset_Y, CameraOffset_Z决定，
+	 * 这个过程是立刻的，不需要插值
+	 */
 	PivotLocation =
 		SmoothedPivotTarget.GetLocation() +
-		UKismetMathLibrary::GetForwardVector(SmoothedPivotTarget.Rotator()) * GetCameraBehaviorParam(
-			NAME_PivotOffset_X) +
-		UKismetMathLibrary::GetRightVector(SmoothedPivotTarget.Rotator()) * GetCameraBehaviorParam(
-			NAME_PivotOffset_Y) +
-		UKismetMathLibrary::GetUpVector(SmoothedPivotTarget.Rotator()) * GetCameraBehaviorParam(
-			NAME_PivotOffset_Z);
-
-	// Step 5: Calculate Target Camera Location. Get the Pivot location and apply camera relative offsets.
+		UKismetMathLibrary::GetForwardVector(SmoothedPivotTarget.Rotator()) * GetCameraBehaviorParam(NAME_PivotOffset_X) +
+		UKismetMathLibrary::GetRightVector(SmoothedPivotTarget.Rotator()) * GetCameraBehaviorParam(NAME_PivotOffset_Y) +
+		UKismetMathLibrary::GetUpVector(SmoothedPivotTarget.Rotator()) * GetCameraBehaviorParam(NAME_PivotOffset_Z);
+	
+	/*
+	 * Step 5: TargetCameraLocation = PivotLocation + CameraBehavior中的偏移，偏移方向由TargetCameraRotation(见Step2)决定，
+	 * 最后还需要对DebugViewOffset进行偏移
+	 */
 	TargetCameraLocation = UKismetMathLibrary::VLerp(
 		PivotLocation +
-		UKismetMathLibrary::GetForwardVector(TargetCameraRotation) * GetCameraBehaviorParam(
-			NAME_CameraOffset_X) +
-		UKismetMathLibrary::GetRightVector(TargetCameraRotation) * GetCameraBehaviorParam(NAME_CameraOffset_Y)
-		+
+		UKismetMathLibrary::GetForwardVector(TargetCameraRotation) * GetCameraBehaviorParam(NAME_CameraOffset_X) +
+		UKismetMathLibrary::GetRightVector(TargetCameraRotation) * GetCameraBehaviorParam(NAME_CameraOffset_Y) +
 		UKismetMathLibrary::GetUpVector(TargetCameraRotation) * GetCameraBehaviorParam(NAME_CameraOffset_Z),
 		PivotTarget.GetLocation() + DebugViewOffset,
 		GetCameraBehaviorParam(NAME_Override_Debug));
@@ -200,7 +231,7 @@ bool AOnaPlayerCameraManager::CustomCameraBehavior(float DeltaTime, FVector& Loc
 
 	// Step 8: Lerp First Person Override and return target camera parameters.
 	FTransform TargetCameraTransform(TargetCameraRotation, TargetCameraLocation, FVector::OneVector);
-	FTransform FPTargetCameraTransform(TargetCameraRotation, FPTarget, FVector::OneVector);
+	FTransform FPTargetCameraTransform(TargetCameraRotation, FPLocation, FVector::OneVector);
 
 	const FTransform& MixedTransform = UKismetMathLibrary::TLerp(TargetCameraTransform, FPTargetCameraTransform,
 	                                                             GetCameraBehaviorParam(
@@ -219,6 +250,12 @@ bool AOnaPlayerCameraManager::CustomCameraBehavior(float DeltaTime, FVector& Loc
 	return true;
 }
 
+/**
+ * \brief CurrentLocation和TargetLocation延CameraRotation的Yaw进行弧形插值 
+ * \param CurrentLocation Current Location，插值起点
+ * \param TargetLocation Target Location，插值终点
+ * \param CameraRotation Camera Rotation，会用到Yaw方向
+ */
 FVector AOnaPlayerCameraManager::CalculateAxisIndependentLag(FVector CurrentLocation, FVector TargetLocation, FRotator CameraRotation, FVector LagSpeeds, float DeltaTime)
 {
 	CameraRotation.Roll = 0.0f;

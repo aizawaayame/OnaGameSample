@@ -66,10 +66,18 @@ void AOnaPlayerController::SetupInputComponent()
 	
 }
 
+/**
+ * 绑定ActionKeyMapping到函数
+ */
 void AOnaPlayerController::BindActions(UInputMappingContext* Context)
 {
+	
 	if (Context)
 	{
+		/**
+		 * 固定写法：
+		 * 绑定ActionKeyMapping到函数
+		 */
 		const TArray<FEnhancedActionKeyMapping>& Mappings = Context->GetMappings();
 		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
 		{
@@ -87,10 +95,17 @@ void AOnaPlayerController::BindActions(UInputMappingContext* Context)
 	}
 }
 
+/**
+ * 添加InputMappingContext到UEnhancedInputLocalPlayerSubsystem
+ */
 void AOnaPlayerController::SetupInputs()
 {
 	if (PossessedCharacter)
 	{
+		/**
+		 * 固定写法：
+		 * 具体来说，它获取本地玩家的 `UEnhancedInputLocalPlayerSubsystem` 子系统，并使用 `FModifyContextOptions` 选项强制立即应用输入映射上下文。然后，它将默认输入映射上下文 `DefaultInputMappingContext` 添加到子系统中。如果角色具有调试组件 `UOnaCharacterDebugComponent`，则还会将调试输入映射上下文 `DebugInputMappingContext` 添加到子系统中。
+		 */
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 		{
 			FModifyContextOptions Options;
@@ -104,6 +119,10 @@ void AOnaPlayerController::SetupInputs()
 	}
 }
 
+/**
+ * 绑定PlayerCameraManager
+ * CameraManager->OnPossess(PossessedCharacter)
+ */
 void AOnaPlayerController::SetupCamera()
 {
 	AOnaPlayerCameraManager* CastedMgr = Cast<AOnaPlayerCameraManager>(PlayerCameraManager);

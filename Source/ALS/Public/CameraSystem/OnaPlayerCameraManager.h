@@ -25,9 +25,9 @@ public:
 	float GetCameraBehaviorParam(FName CurveName) const;
 protected:
 	
-	virtual void UpdateViewTargetInternal(FTViewTarget& OutVT, float DeltaTime) override;
+	virtual void UpdateViewTargetInternal(FTViewTarget& VTOut, float DeltaTime) override;
 
-	UFUNCTION(BlueprintCallable, Category = "ALS|Camera")
+	UFUNCTION(BlueprintCallable, Category = "Camera")
 	bool CustomCameraBehavior(float DeltaTime, FVector& LocationOut, FRotator& RotationOut, float& FOVPOut);
 
 #pragma region Props
