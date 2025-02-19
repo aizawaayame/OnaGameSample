@@ -46,6 +46,44 @@ public:
 
 	UFUNCTION(BlueprintGetter, Category = "Essential Information")
 	FORCEINLINE float GetAimYawRate() const { return AimYawRate; }
+
+	UFUNCTION(BlueprintGetter, Category = "Essential Information")
+	FORCEINLINE bool HasMovementInput() const { return bHasMovementInput; }
+#pragma endregion
+
+#pragma region Character State Getter/Setter
+	UFUNCTION(BlueprintGetter, Category = "Character States")
+	FORCEINLINE EOnaMovementState GetMovementState() const { return MovementState;}
+	
+	UFUNCTION(BlueprintCallable, Category = "Character States")
+	void SetMovementState(EOnaMovementState NewState, bool bForce = false);
+
+	UFUNCTION(BlueprintGetter, Category = "Character States")
+	FORCEINLINE EOnaMovementAction GetMovementAction() const { return MovementAction;}
+	
+	UFUNCTION(BlueprintGetter, Category = "Character States")
+	FORCEINLINE EOnaMovementState GetPrevMovementState() const { return PrevMovementState; }
+	
+	UFUNCTION(BlueprintGetter, Category = "Character States")
+	FORCEINLINE EOnaViewMode GetViewMode() const { return ViewMode; }
+
+	UFUNCTION(BlueprintGetter, Category = "Character States")
+	FORCEINLINE int32 GetOverlayOverrideState() const { return OverlayOverrideState; }
+	
+	UFUNCTION(BlueprintCallable, Category = "Character States")
+	FORCEINLINE void SetOverlayOverrideState(int32 NewState) {OverlayOverrideState = NewState;}
+
+	UFUNCTION(BlueprintGetter, Category = "Character States")
+	FORCEINLINE EOnaStance GetStance() const { return Stance;}
+
+	UFUNCTION(BlueprintGetter, Category = "Character States")
+	FORCEINLINE EOnaRotationMode GetRotationMode() const { return RotationMode;}
+
+	UFUNCTION(BlueprintGetter, Category = "Character States")
+	FORCEINLINE EOnaGait GetGait() const { return Gait;}
+	
+	UFUNCTION(BlueprintGetter, Category = "Character States")
+	FORCEINLINE EOnaOverlayState GetOverlayState() const { return OverlayState;}
 #pragma endregion
 	
 #pragma region Camera System
@@ -75,11 +113,6 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Input")
 	void CameraRightAction(float Value);
-#pragma endregion
-
-#pragma region Character State
-	UFUNCTION(BlueprintCallable, Category = "Character States")
-	void SetMovementState(EOnaMovementState NewState, bool bForce = false);
 #pragma endregion
 
 #pragma region State Changes
