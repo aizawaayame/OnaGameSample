@@ -23,12 +23,29 @@ AOnaCharacterBase::AOnaCharacterBase(const FObjectInitializer& ObjectInitializer
 	bUseControllerRotationYaw = 0;
 	bReplicates = true;
 	SetReplicatingMovement(true);
+	
 }
 
 void AOnaCharacterBase::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	SetEssentialValues(DeltaSeconds);
+
+	if (MovementState == EOnaMovementState::Grounded)
+	{
+		UpdateCharacterMovement();
+		UpdateGroundedRotation(DeltaSeconds);
+	}
+	else if (MovementState == EOnaMovementState::InAir)
+	{
+		UpdateInAirRotation(DeltaSeconds);
+	}
+
+	/**
+	 * Cache Value
+	 */
+	PreviousVelocity = GetVelocity();
+	PreviousAimYaw = AimingRotation.Yaw;
 }
 
 void AOnaCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -97,6 +114,97 @@ void AOnaCharacterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, ui
 	{
 		SetMovementState(EOnaMovementState::InAir);
 	}
+}
+
+
+void AOnaCharacterBase::OnMovementActionChanged(EOnaMovementAction PreviousAction)
+{
+}
+
+void AOnaCharacterBase::OnStanceChanged(EOnaStance PreviousStance)
+{
+}
+
+void AOnaCharacterBase::OnRotationModeChanged(EOnaRotationMode PreviousRotationMode)
+{
+}
+
+void AOnaCharacterBase::OnGaitChanged(EOnaGait PreviousGait)
+{
+}
+
+void AOnaCharacterBase::OnViewModeChanged(EOnaViewMode PreviousViewMode)
+{
+}
+
+void AOnaCharacterBase::OnOverlayStateChanged(EOnaOverlayState PreviousState)
+{
+}
+
+void AOnaCharacterBase::OnVisibleMeshChanged(const USkeletalMesh* PreviousSkeletalMesh)
+{
+}
+
+void AOnaCharacterBase::OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+	Super::OnStartCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+}
+
+void AOnaCharacterBase::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+	Super::OnEndCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+}
+
+void AOnaCharacterBase::OnJumped_Implementation()
+{
+	Super::OnJumped_Implementation();
+}
+
+void AOnaCharacterBase::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+}
+
+void AOnaCharacterBase::OnLandFrictionReset()
+{
+}
+
+/**
+ * \brief TODO 
+ * \param ... 
+ * \return  
+ */
+void AOnaCharacterBase::UpdateCharacterMovement()
+{
+	
+}
+
+//TODO
+void AOnaCharacterBase::UpdateGroundedRotation(float DeltaTime)
+{
+	if (MovementAction == EOnaMovementAction::None)
+	{
+		const bool bCanUpdateRotation = (bIsMoving && bHasMovementInput || Speed > 150.f) && !HasAnyRootMotion();
+		if (bCanUpdateRotation)
+		{
+			
+		}
+		else
+		{
+			
+		}
+	}
+	/*
+	 * TODO
+	 */
+	else if (MovementAction == EOnaMovementAction::Rolling)
+	{
+		
+	}
+}
+
+void AOnaCharacterBase::UpdateInAirRotation(float DeltaTime)
+{
 }
 
 void AOnaCharacterBase::OnMovementStateChanged(const EOnaMovementState& PreviousState)

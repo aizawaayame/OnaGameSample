@@ -38,6 +38,8 @@ public:
 		
 		virtual FSavedMovePtr AllocateNewMove() override;
 	};
+
+	UOnaCharacterMovementComponent(const FObjectInitializer& ObjectInitializer);
 	
 	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
 	virtual class FNetworkPredictionData_Client* GetPredictionData_Client() const override;

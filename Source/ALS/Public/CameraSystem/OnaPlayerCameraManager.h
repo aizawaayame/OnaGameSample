@@ -43,6 +43,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	FVector RootLocation;
 
+	/**
+	 * `OnPossess`时Location初始化为Character的Location
+	 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	FTransform SmoothedPivotTarget;
 
