@@ -5,7 +5,6 @@
 #include "CharacterLogic/OnaCharacterDebugComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
-
 const FName NAME_CameraBehavior(TEXT("CameraBehavior"));
 const FName NAME_CameraOffset_X(TEXT("CameraOffset_X"));
 const FName NAME_CameraOffset_Y(TEXT("CameraOffset_Y"));
@@ -124,7 +123,13 @@ bool AOnaPlayerCameraManager::CustomCameraBehavior(float DeltaTime, FVector& Loc
 	 *	- PivotTarget当前Character的GetLocation() (见GetThirdPersonPivotTarget函数)
 	 *	- FPLocation当前Character的Mesh插槽(见GetFirstPersonCameraTarget函数)
 	 * Intermediate：TargetCameraLocation，TargetCameraRotation，SmoothedPivotTarget，PivotLocation
+	 *  - TargetCameraRotation: CameraRotation到ControlRotation的插值
+	 *  - TargetCameraLocation：CameraLocation到ControlLocation的插值
+	 *		- 做逼近式的从CameraLocation到ControlLocation的弧形插值(SmoothedPivotTarget)
+	 *		- 偏移相机位置PivotLocation
 	 * Output：
+	 *  - Location：做Debug调整
+	 *  - Rotation：做Debug调整
 	 */
 	
 	/*
@@ -136,7 +141,7 @@ bool AOnaPlayerCameraManager::CustomCameraBehavior(float DeltaTime, FVector& Loc
 	 * 从ControlledCharacter上获取FOV和bRightShoulder
 	 */
 	const FTransform& PivotTarget = ControlledCharacter->GetThirdPersonPivotTarget();
-	const FVector& FPLocation = ControlledCharacter->GetFirstPersonCameraTarget();
+	const FVector& FPSocketLocation = ControlledCharacter->GetFirstPersonCameraTarget();
 	float TPFOV = 90.0f;
 	float FPFOV = 90.0f;
 	bool bRightShoulder = false;
@@ -231,7 +236,7 @@ bool AOnaPlayerCameraManager::CustomCameraBehavior(float DeltaTime, FVector& Loc
 
 	// Step 8: Lerp First Person Override and return target camera parameters.
 	FTransform TargetCameraTransform(TargetCameraRotation, TargetCameraLocation, FVector::OneVector);
-	FTransform FPTargetCameraTransform(TargetCameraRotation, FPLocation, FVector::OneVector);
+	FTransform FPTargetCameraTransform(TargetCameraRotation, FPSocketLocation, FVector::OneVector);
 
 	const FTransform& MixedTransform = UKismetMathLibrary::TLerp(TargetCameraTransform, FPTargetCameraTransform,
 	                                                             GetCameraBehaviorParam(

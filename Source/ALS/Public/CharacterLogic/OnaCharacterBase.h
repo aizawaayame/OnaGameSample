@@ -115,12 +115,6 @@ public:
 	void CameraRightAction(float Value);
 #pragma endregion
 
-#pragma region State Changes
-	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
-	virtual void OnMovementStateChanged(const EOnaMovementState& PreviousState);
-	
-	void SetEssentialValues(float DeltaTime);
-#pragma endregion
 
 #pragma region Replication
 	UFUNCTION(Category = "Replication")
@@ -136,6 +130,51 @@ public:
 	void OnRep_VisibleMesh(const USkeletalMesh* PreviousSkeletalMesh);
 #pragma endregion
 
+protected:
+
+#pragma region State Changes
+	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
+
+	virtual void OnMovementStateChanged(const EOnaMovementState& PreviousState);
+
+	virtual void OnMovementActionChanged(EOnaMovementAction PreviousAction);
+
+	virtual void OnStanceChanged(EOnaStance PreviousStance);
+
+	virtual void OnRotationModeChanged(EOnaRotationMode PreviousRotationMode);
+
+	virtual void OnGaitChanged(EOnaGait PreviousGait);
+
+	virtual void OnViewModeChanged(EOnaViewMode PreviousViewMode);
+
+	virtual void OnOverlayStateChanged(EOnaOverlayState PreviousState);
+
+	virtual void OnVisibleMeshChanged(const USkeletalMesh* PreviousSkeletalMesh);
+
+	virtual void OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+
+	virtual void OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+
+	virtual void OnJumped_Implementation() override;
+
+	virtual void Landed(const FHitResult& Hit) override;
+
+	void OnLandFrictionReset();
+
+	void SetEssentialValues(float DeltaTime);
+
+	void UpdateCharacterMovement();
+
+	void UpdateGroundedRotation(float DeltaTime);
+
+	void UpdateInAirRotation(float DeltaTime);
+#pragma endregion 
+
+#pragma region Utils
+
+	float CalculateGroundedRotationRate() const;
+	
+#pragma endregion 
 #pragma endregion 
 
 protected:

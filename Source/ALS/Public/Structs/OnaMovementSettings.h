@@ -23,7 +23,7 @@ struct FOnaMovementSettings
 	float SprintSpeed = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Settings")
-	TObjectPtr<const UCurveFloat> MovementCurve = nullptr;
+	TObjectPtr<const UCurveVector> MovementCurve = nullptr;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Settings")
 	TObjectPtr<const UCurveFloat> RotationRateCurve = nullptr;
