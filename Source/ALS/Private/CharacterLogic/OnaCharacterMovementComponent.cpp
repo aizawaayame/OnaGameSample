@@ -77,7 +77,8 @@ class FNetworkPredictionData_Client* UOnaCharacterMovementComponent::GetPredicti
 }
 
 /**
- * \brief 更新角色的最大移动速度 
+ * \brief 仅当bRequestMovementSettingsChange=true时更新角色的最大移动速度
+ * - 最终的MaxWalkSpeed，MaxWalkSpeedCrouched由当前的AllowedGait决定
  * \param DeltaSeconds 
  * \return  
  */
@@ -133,7 +134,13 @@ float UOnaCharacterMovementComponent::GetMaxBrakingDeceleration() const
 }
 
 /**
- * \brief 将角色当前速度映射到配置的移动速度范围（0-3）： 0 = 停止，1 = 步行速度，2 = 奔跑速度，3 = 冲刺速度。 这样可以在改变移动速度的同时，使用映射范围进行计算以获得一致的结果 
+ * \brief 将角色当前速度映射到配置的移动速度范围（0-3）
+ * - 0 = 停止，
+ * - 1= 步行速度，
+ * - 2 = 奔跑速度，
+ * - 3 = 冲刺速度。
+ * 
+ * 这样可以在改变移动速度的同时，使用映射范围进行计算以获得一致的结果 
  * \return  
  */
 float UOnaCharacterMovementComponent::GetMappedSpeed() const
@@ -163,6 +170,12 @@ void UOnaCharacterMovementComponent::SetMovementSettings(FOnaMovementSettings Ne
 	bRequestMovementSettingsChange = true;
 }
 
+/**
+ * \brief 设置角色的移动姿态
+ * - 
+ * \param NewAllowedGait 
+ * \return  
+ */
 void UOnaCharacterMovementComponent::SetAllowedGait(EOnaGait NewAllowedGait)
 {
 	if (AllowedGait != NewAllowedGait)

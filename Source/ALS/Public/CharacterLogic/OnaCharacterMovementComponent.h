@@ -53,10 +53,13 @@ public:
 	// Movement Settings Variables
 	UPROPERTY()
 	uint8 bRequestMovementSettingsChange = 1;
-
+	
+	/*
+	 * 当前的移动状态
+	 */
 	UPROPERTY()
 	EOnaGait AllowedGait = EOnaGait::Walking;
-
+	
 	UPROPERTY(BlueprintReadOnly, Category = "Movement System")
 	FOnaMovementSettings CurrentMovementSettings;
 
