@@ -196,6 +196,7 @@ protected:
 #pragma region Utils
 
 	float CalculateGroundedRotationRate() const;
+	void SetMovementModel();
 	
 #pragma endregion
 	
@@ -211,115 +212,117 @@ protected:
 #pragma endregion
 	
 #pragma region Input
-	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite, Category = "Input")
+	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite, Category = "ALS|Input")
 	EOnaRotationMode DesiredRotationMode = EOnaRotationMode::LookingDirection;
 
-	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite, Category = "Input")
+	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite, Category = "ALS|Input")
 	EOnaGait DesiredGait = EOnaGait::Running;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "Input")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "ALS|Input")
 	EOnaStance DesiredStance = EOnaStance::Standing;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Input", BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "ALS|Input", BlueprintReadOnly)
 	float LookUpDownRate = 1.25f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Input", BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "ALS|Input", BlueprintReadOnly)
 	float LookLeftRightRate = 1.25f;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Input", BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "ALS|Input", BlueprintReadOnly)
 	float RollDoubleTapTimeout = 0.3f;
 
-	UPROPERTY(Category = "Input", BlueprintReadOnly)
+	UPROPERTY(Category = "ALS|Input", BlueprintReadOnly)
 	bool bBreakFall = false;
 
-	UPROPERTY(Category = "Input", BlueprintReadOnly)
+	UPROPERTY(Category = "ALS|Input", BlueprintReadOnly)
 	bool bSprintHeld = false;
 #pragma endregion
 	
 #pragma region State Values
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "State Values", ReplicatedUsing = OnRep_OverlayState)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ALS|State Values", ReplicatedUsing = OnRep_OverlayState)
 	EOnaOverlayState OverlayState = EOnaOverlayState::Default;
 
 	// UPROPERTY(BlueprintReadOnly, Category = "State Values")
 	// EALSGroundedEntryState GroundedEntryState;
 
-	UPROPERTY(BlueprintReadOnly, Category = "State Values")
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|State Values")
 	EOnaMovementState MovementState = EOnaMovementState::None;
 
-	UPROPERTY(BlueprintReadOnly, Category = "State Values")
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|State Values")
 	EOnaMovementState PrevMovementState = EOnaMovementState::None;
 
-	UPROPERTY(BlueprintReadOnly, Category = "State Values")
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|State Values")
 	EOnaMovementAction MovementAction = EOnaMovementAction::None;
 
-	UPROPERTY(BlueprintReadOnly, Category = "State Values", ReplicatedUsing = OnRep_RotationMode)
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|State Values", ReplicatedUsing = OnRep_RotationMode)
 	EOnaRotationMode RotationMode = EOnaRotationMode::LookingDirection;
 
-	UPROPERTY(BlueprintReadOnly, Category = "State Values")
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|State Values")
 	EOnaGait Gait = EOnaGait::Walking;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "State Values")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|State Values")
 	EOnaStance Stance = EOnaStance::Standing;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "State Values", ReplicatedUsing = OnRep_ViewMode)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|State Values", ReplicatedUsing = OnRep_ViewMode)
 	EOnaViewMode ViewMode = EOnaViewMode::ThirdPerson;
 
-	UPROPERTY(BlueprintReadOnly, Category = "State Values")
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|State Values")
 	int32 OverlayOverrideState = 0;
 #pragma endregion
 
 #pragma region Camera System
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Camera System")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "ALS|Camera System")
 	float ThirdPersonFOV = 90.0f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Camera System")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "ALS|Camera System")
 	float FirstPersonFOV = 90.0f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Camera System")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "ALS|Camera System")
 	bool bRightShoulder = false;
 
 #pragma endregion 
 
 #pragma region Movement System
-	UPROPERTY(BlueprintReadOnly, Category = "Movement System")
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|Movement System")
 	FOnaMovementStateSettings MovementData;
-	
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|Movement System")
+	FDataTableRowHandle MovementModel;
 #pragma endregion
 	
 #pragma region Rotation System
-	UPROPERTY(BlueprintReadOnly, Category = "Rotation System")
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|Rotation System")
 	FRotator TargetRotation = FRotator::ZeroRotator;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Rotation System")
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|Rotation System")
 	FRotator InAirRotation = FRotator::ZeroRotator;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Rotation System")
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|Rotation System")
 	float YawOffset = 0.0f;
 #pragma endregion
 	
 #pragma region Essential Information
-	UPROPERTY(BlueprintReadOnly, Category = "Essential Information")
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|Essential Information")
 	FVector Acceleration = FVector::ZeroVector;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Essential Information")
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|Essential Information")
 	bool bIsMoving = false;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Essential Information")
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|Essential Information")
 	bool bHasMovementInput = false;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Essential Information")
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|Essential Information")
 	FRotator LastVelocityRotation;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Essential Information")
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|Essential Information")
 	FRotator LastMovementInputRotation;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Essential Information")
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|Essential Information")
 	float Speed = 0.0f;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Essential Information")
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|Essential Information")
 	float MovementInputAmount = 0.0f;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Essential Information")
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|Essential Information")
 	float AimYawRate = 0.0f;
 #pragma endregion 
 	
@@ -330,17 +333,17 @@ protected:
 #pragma endregion
 	
 #pragma region Replicated Essential Information
-	UPROPERTY(BlueprintReadOnly, Replicated, Category = "Essential Information")
+	UPROPERTY(BlueprintReadOnly, Replicated, Category = "ALS|Essential Information")
 	FRotator ReplicatedControlRotation = FRotator::ZeroRotator;
 	
-	UPROPERTY(BlueprintReadOnly, Category = "Essential Information")
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|Essential Information")
 	float EasedMaxAcceleration = 0.0f;
 
-	UPROPERTY(BlueprintReadOnly, Replicated, Category = "Essential Information")
+	UPROPERTY(BlueprintReadOnly, Replicated, Category = "ALS|Essential Information")
 	FVector ReplicatedCurrentAcceleration = FVector::ZeroVector;
 #pragma endregion
 	
-	UPROPERTY(BlueprintReadOnly, Category = "Camera")
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|Camera")
 	TObjectPtr<UOnaPlayerCameraBehavior> CameraBehavior;
 	
 	/* Smooth out aiming by interping control rotation*/

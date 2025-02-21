@@ -79,7 +79,6 @@ class FNetworkPredictionData_Client* UOnaCharacterMovementComponent::GetPredicti
 /**
  * \brief 仅当bRequestMovementSettingsChange=true时更新角色的最大移动速度
  * - 最终的MaxWalkSpeed，MaxWalkSpeedCrouched由当前的AllowedGait决定
- * \param DeltaSeconds 
  * \return  
  */
 void UOnaCharacterMovementComponent::OnMovementUpdated(float DeltaSeconds, const FVector& OldLocation, const FVector& OldVelocity)
@@ -111,7 +110,6 @@ void UOnaCharacterMovementComponent::PhysWalking(float deltaTime, int32 Iteratio
 	{
 		GroundFriction = CurrentMovementSettings.MovementCurve->GetVectorValue(GetMappedSpeed()).Z;
 	}
-	
 	Super::PhysWalking(deltaTime, Iterations);
 }
 
@@ -164,6 +162,9 @@ float UOnaCharacterMovementComponent::GetMappedSpeed() const
 	return FMath::GetMappedRangeValueClamped<float, float>({0, LocWalkSpeed}, {0, 1}, Speed);
 }
 
+/**
+ * \brief Set by Owner Character
+ */
 void UOnaCharacterMovementComponent::SetMovementSettings(FOnaMovementSettings NewMovementSettings)
 {
 	CurrentMovementSettings = NewMovementSettings;

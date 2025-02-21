@@ -35,6 +35,12 @@ void AOnaCharacterBase::PostInitializeComponents()
 void AOnaCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GetMesh()->AddTickPrerequisiteActor(this);
+
+	SetMovementModel();
+
+	OnaCharacterMovement->SetMovementSettings(GetTargetMovementSettings());
 }
 
 void AOnaCharacterBase::Tick(float DeltaSeconds)
@@ -248,6 +254,14 @@ float AOnaCharacterBase::CalculateGroundedRotationRate() const
 	const float CurveVal = OnaCharacterMovement->CurrentMovementSettings.RotationRateCurve->GetFloatValue(MappedSpeedVal);
 	const float ClampedAimYawRate = FMath::GetMappedRangeValueClamped<float, float>({0.0f, 300.0f}, {1.0f, 3.0f}, AimYawRate);
 	return CurveVal * ClampedAimYawRate;
+}
+
+void AOnaCharacterBase::SetMovementModel()
+{
+	const FString ContextString = GetFullName();
+	FOnaMovementStateSettings* OutRow = MovementModel.DataTable->FindRow<FOnaMovementStateSettings>(MovementModel.RowName, ContextString);
+	check(OutRow);
+	MovementData = *OutRow;
 }
 
 void AOnaCharacterBase::SetMovementState(EOnaMovementState NewState, bool bForce)
