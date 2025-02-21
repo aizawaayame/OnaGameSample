@@ -32,6 +32,11 @@ void AOnaCharacterBase::PostInitializeComponents()
 	OnaCharacterMovement = Cast<UOnaCharacterMovementComponent>(Super::GetMovementComponent());
 }
 
+void AOnaCharacterBase::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
 void AOnaCharacterBase::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
@@ -46,7 +51,7 @@ void AOnaCharacterBase::Tick(float DeltaSeconds)
 	{
 		UpdateInAirRotation(DeltaSeconds);
 	}
-
+	
 	/**
 	 * Cache Value
 	 */

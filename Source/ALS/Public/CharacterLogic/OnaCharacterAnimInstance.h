@@ -16,7 +16,29 @@
 #include "Enums/OnaViewMode.h"
 #include "OnaCharacterAnimInstance.generated.h"
 
+class UCurveVector;
+class UOnaCharacterDebugComponent;
 class AOnaCharacterBase;
+USTRUCT(BlueprintType)
+struct FOnaDynamicMontageParams
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dynamic Transition")
+	TObjectPtr<UAnimSequenceBase> Animation = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dynamic Transition")
+	float BlendInTime = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dynamic Transition")
+	float BlendOutTime = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dynamic Transition")
+	float PlayRate = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dynamic Transition")
+	float StartTime = 0.0f;
+};
 
 USTRUCT(BlueprintType)
 struct FOnaAnimCharacterInfo
@@ -607,6 +629,195 @@ public:
 	}
 };
 
+USTRUCT(BlueprintType)
+struct FOnaTurnInPlaceAsset
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
+	TObjectPtr<UAnimSequenceBase> Animation = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
+	float AnimatedAngle = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
+	FName SlotName = NAME_None;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
+	float PlayRate = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
+	bool ScaleTurnAngle = true;
+};
+
+USTRUCT(BlueprintType)
+struct FOnaAnimTurnInPlace
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
+	float TurnCheckMinAngle = 45.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
+	float Turn180Threshold = 130.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
+	float AimYawRateLimit = 50.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
+	float ElapsedDelayTime = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
+	float MinAngleDelay = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
+	float MaxAngleDelay = 0.75f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
+	FOnaTurnInPlaceAsset N_TurnIP_L90;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
+	FOnaTurnInPlaceAsset N_TurnIP_R90;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
+	FOnaTurnInPlaceAsset N_TurnIP_L180;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
+	FOnaTurnInPlaceAsset N_TurnIP_R180;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
+	FOnaTurnInPlaceAsset CLF_TurnIP_L90;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
+	FOnaTurnInPlaceAsset CLF_TurnIP_R90;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
+	FOnaTurnInPlaceAsset CLF_TurnIP_L180;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
+	FOnaTurnInPlaceAsset CLF_TurnIP_R180;
+};
+
+USTRUCT(BlueprintType)
+struct FOnaAnimRotateInPlace
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rotate In Place")
+	float RotateMinThreshold = -50.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rotate In Place")
+	float RotateMaxThreshold = 50.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rotate In Place")
+	float AimYawRateMinRange = 90.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rotate In Place")
+	float AimYawRateMaxRange = 270.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rotate In Place")
+	float MinPlayRate = 1.15f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rotate In Place")
+	float MaxPlayRate = 3.0f;
+};
+
+USTRUCT(BlueprintType)
+struct FOnaAnimConfiguration
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Configuration")
+	float AnimatedWalkSpeed = 150.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Configuration")
+	float AnimatedRunSpeed = 350.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Configuration")
+	float AnimatedSprintSpeed = 600.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Configuration")
+	float AnimatedCrouchSpeed = 150.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Configuration")
+	float VelocityBlendInterpSpeed = 12.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Configuration")
+	float GroundedLeanInterpSpeed = 4.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Configuration")
+	float InAirLeanInterpSpeed = 4.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Configuration")
+	float SmoothedAimingRotationInterpSpeed = 10.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Configuration")
+	float InputYawOffsetInterpSpeed = 8.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Configuration")
+	float TriggerPivotSpeedLimit = 200.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Configuration")
+	float FootHeight = 13.5f;
+
+	/** Threshold value for activating dynamic transition on various animations */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Configuration")
+	float DynamicTransitionThreshold = 8.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Configuration")
+	float IK_TraceDistanceAboveFoot = 50.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Configuration")
+	float IK_TraceDistanceBelowFoot = 45.0f;
+};
+
+USTRUCT(BlueprintType)
+struct FOnaAnimGraphInAir
+{
+	GENERATED_BODY()
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - In Air")
+	bool bJumped = false;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - In Air")
+	float JumpPlayRate = 1.2f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - In Air")
+	float FallSpeed = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - In Air")
+	float LandPrediction = 1.0f;
+};
+
+USTRUCT(BlueprintType)
+struct FOnaAnimGraphAimingValues
+{
+	GENERATED_BODY()
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Aiming Values")
+	FRotator SmoothedAimingRotation = FRotator::ZeroRotator;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Aiming Values")
+	FRotator SpineRotation = FRotator::ZeroRotator;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Aiming Values")
+	FVector2D AimingAngle = FVector2D::ZeroVector;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Aiming Values")
+	float AimSweepTime = 0.5f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Aiming Values")
+	float InputYawOffsetTime = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Aiming Values")
+	float ForwardYawTime = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Aiming Values")
+	float LeftYawTime = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Aiming Values")
+	float RightYawTime = 0.0f;
+};
 
 /**
  * 
@@ -619,6 +830,128 @@ public:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeBeginPlay() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void PlayTransition(const FOnaDynamicMontageParams& Parameters);
+	
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void PlayTransitionChecked(const FOnaDynamicMontageParams& Parameters);
+	
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void PlayDynamicTransition(float ReTriggerDelay, FOnaDynamicMontageParams Parameters);
+
+	UFUNCTION(BlueprintCallable, Category = "Event")
+	void OnJumped();
+
+	UFUNCTION(BlueprintCallable, Category = "Event")
+	void OnPivot();
+	
+protected:
+
+	UFUNCTION(BlueprintCallable, Category = "Grounded")
+	FORCEINLINE void SetTrackedHipsDirection(EOnaHipsDirection HipsDirection) { Grounded.TrackedHipsDirection = HipsDirection; }
+
+	UFUNCTION(BlueprintCallable, Category = "Grounded")
+	FORCEINLINE void SetGroundedEntryState(EOnaGroundedEntryState NewState) { GroundedEntryState = NewState; }
+
+	/** Enable Movement Animations if IsMoving and HasMovementInput, or if the Speed is greater than 150. */
+	UFUNCTION(BlueprintCallable, Category = "Grounded")
+	bool ShouldMoveCheck() const;
+
+	/** Only perform a Rotate In Place Check if the character is Aiming or in First Person. */
+	UFUNCTION(BlueprintCallable, Category = "Grounded")
+	bool CanRotateInPlace() const;
+
+	/**
+	 * Only perform a Turn In Place check if the character is looking toward the camera in Third Person,
+	 * and if the "Enable Transition" curve is fully weighted. The Enable_Transition curve is modified within certain
+	 * states of the AnimBP so that the character can only turn while in those states..
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Grounded")
+	bool CanTurnInPlace() const;
+
+	/**
+	 * Only perform a Dynamic Transition check if the "Enable Transition" curve is fully weighted.
+	 * The Enable_Transition curve is modified within certain states of the AnimBP so
+	 * that the character can only transition while in those states.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Grounded")
+	bool CanDynamicTransition() const;
+
+private:
+	void PlayDynamicTransitionDelay();
+
+	void OnJumpedDelay();
+
+	void OnPivotDelay();
+
+	/** Update Values */
+
+	void UpdateAimingValues(float DeltaSeconds);
+
+	void UpdateLayerValues();
+
+	void UpdateFootIK(float DeltaSeconds);
+
+	void UpdateMovementValues(float DeltaSeconds);
+
+	void UpdateRotationValues();
+
+	void UpdateInAirValues(float DeltaSeconds);
+
+	void UpdateRagdollValues();
+
+	/** Foot IK */
+
+	void SetFootLocking(float DeltaSeconds, FName EnableFootIKCurve, FName FootLockCurve, FName IKFootBone,
+                          float& CurFootLockAlpha, bool& UseFootLockCurve,
+                          FVector& CurFootLockLoc, FRotator& CurFootLockRot);
+
+	void SetFootLockOffsets(float DeltaSeconds, FVector& LocalLoc, FRotator& LocalRot);
+
+	void SetPelvisIKOffset(float DeltaSeconds, FVector FootOffsetLTarget, FVector FootOffsetRTarget);
+
+	void ResetIKOffsets(float DeltaSeconds);
+
+	void SetFootOffsets(float DeltaSeconds, FName EnableFootIKCurve, FName IKFootBone, FName RootBone,
+                          FVector& CurLocationTarget, FVector& CurLocationOffset, FRotator& CurRotationOffset);
+
+	/** Grounded */
+
+	void RotateInPlaceCheck();
+
+	void TurnInPlaceCheck(float DeltaSeconds);
+
+	void DynamicTransitionCheck();
+
+	FOnaVelocityBlend CalculateVelocityBlend() const;
+
+	void TurnInPlace(FRotator TargetRotation, float PlayRateScale, float StartTime, bool OverrideCurrent);
+
+	/** Movement */
+
+	FVector CalculateRelativeAccelerationAmount() const;
+
+	float CalculateStrideBlend() const;
+
+	float CalculateWalkRunBlend() const;
+
+	float CalculateStandingPlayRate() const;
+
+	float CalculateDiagonalScaleAmount() const;
+
+	float CalculateCrouchingPlayRate() const;
+
+	float CalculateLandPrediction() const;
+
+	// FALSLeanAmount CalculateAirLeanAmount() const;
+
+	EOnaMovementDirection CalculateMovementDirection() const;
+
+	/** Util */
+
+	float GetAnimCurveClamped(const FName& Name, float Bias, float ClampMin, float ClampMax) const;
+	
 public:
 	/** References */
 	UPROPERTY(BlueprintReadOnly, Category = "Read Only Data|Character Information")
@@ -667,10 +1000,89 @@ public:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Anim Graph - Grounded")
 	FOnaMovementDirection MovementDirection = EOnaMovementDirection::Forward;
 
+	/** Anim Graph - In Air */
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Anim Graph - In Air", Meta = (
+		ShowOnlyInnerProperties))
+	FOnaAnimGraphInAir InAir;
+
+	/** Anim Graph - Aiming Values */
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Anim Graph - Aiming Values", Meta = (
+		ShowOnlyInnerProperties))
+	FOnaAnimGraphAimingValues AimingValues;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Anim Graph - Aiming Values")
+	FVector2D SmoothedAimingAngle = FVector2D::ZeroVector;
+	
 	/** Anim Graph - Layer Blending */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Anim Graph - Layer Blending", Meta = (
 		ShowOnlyInnerProperties))
 	FOnaAnimGraphLayerBlending LayerBlendingValues;
+
+	/** Turn In Place */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Turn In Place", Meta = (
+		ShowOnlyInnerProperties))
+	FOnaAnimTurnInPlace TurnInPlaceValues;
+
+	/** Rotate In Place */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Rotate In Place", Meta = (
+		    ShowOnlyInnerProperties))
+	FOnaAnimRotateInPlace RotateInPlace;
+
+	/** Configuration */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Main Configuration", Meta = (
+		ShowOnlyInnerProperties))
+	FOnaAnimConfiguration Config;
+
+	/** Blend Curves */
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Blend Curves")
+	TObjectPtr<UCurveFloat> DiagonalScaleAmountCurve = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Blend Curves")
+	TObjectPtr<UCurveFloat> StrideBlend_N_Walk = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Blend Curves")
+	TObjectPtr<UCurveFloat> StrideBlend_N_Run = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Blend Curves")
+	TObjectPtr<UCurveFloat> StrideBlend_C_Walk = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Blend Curves")
+	TObjectPtr<UCurveFloat> LandPredictionCurve = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Blend Curves")
+	TObjectPtr<UCurveFloat> LeanInAirCurve = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Blend Curves")
+	TObjectPtr<UCurveVector> YawOffset_FB = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Blend Curves")
+	TObjectPtr<UCurveVector> YawOffset_LR = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Dynamic Transition")
+	TObjectPtr<UAnimSequenceBase> TransitionAnim_R = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Dynamic Transition")
+	TObjectPtr<UAnimSequenceBase> TransitionAnim_L = nullptr;
+
+	/** IK Bone Names */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Anim Graph - Foot IK")
+	FName IkFootL_BoneName = FName(TEXT("ik_foot_l"));
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Anim Graph - Foot IK")
+	FName IkFootR_BoneName = FName(TEXT("ik_foot_r"));
+
+private:
+	FTimerHandle OnPivotTimer;
+
+	FTimerHandle PlayDynamicTransitionTimer;
+
+	FTimerHandle OnJumpedTimer;
+
+	bool bCanPlayDynamicTransition = true;
+
+	UPROPERTY()
+	TObjectPtr<UOnaCharacterDebugComponent> OnaDebugComponent = nullptr;
 };
 
 
