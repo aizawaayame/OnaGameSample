@@ -5,13 +5,17 @@
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
 #include "Enums/OnaGait.h"
+#include "Enums/OnaGroundedEntryState.h"
+#include "Enums/OnaHipsDirection.h"
 #include "Enums/OnaMovementAction.h"
+#include "Enums/OnaMovementDirection.h"
 #include "Enums/OnaMovementState.h"
 #include "Enums/OnaOverlayState.h"
 #include "Enums/OnaRotationMode.h"
 #include "Enums/OnaStance.h"
 #include "Enums/OnaViewMode.h"
 #include "OnaCharacterAnimInstance.generated.h"
+
 class AOnaCharacterBase;
 
 USTRUCT(BlueprintType)
@@ -274,46 +278,46 @@ struct FOnaOverlayState
 	GENERATED_BODY()
 
 private:
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "ALS|Character States")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Character States")
 	EOnaOverlayState State = EOnaOverlayState::Default;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "ALS|Character States")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Character States")
 	bool Default = true;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "ALS|Character States")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Character States")
 	bool Masculine = false;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "ALS|Character States")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Character States")
 	bool Feminine = false;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "ALS|Character States")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Character States")
 	bool Injured = false;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "ALS|Character States")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Character States")
 	bool HandsTied = false;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "ALS|Character States")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Character States")
 	bool Rifle = false;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "ALS|Character States")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Character States")
 	bool PistolOneHanded = false;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "ALS|Character States")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Character States")
 	bool PistolTwoHanded = false;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "ALS|Character States")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Character States")
 	bool Bow = false;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "ALS|Character States")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Character States")
 	bool Torch = false;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "ALS|Character States")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Character States")
 	bool Binoculars = false;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "ALS|Character States")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Character States")
 	bool Box = false;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "ALS|Character States")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Character States")
 	bool Barrel = false;
 
 public:
@@ -435,6 +439,175 @@ struct FOnaAnimGraphLayerBlending
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Layer Blending")
 	float EnableHandIK_R = 1.0f;
 };
+
+USTRUCT(BlueprintType)
+struct FOnaAnimGraphGrounded
+{
+	GENERATED_BODY()
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Anim Graph - Grounded")
+	EOnaHipsDirection TrackedHipsDirection = EOnaHipsDirection::F;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Grounded")
+	bool bShouldMove = false; // Should be false initially
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Grounded")
+	bool bRotateL = false;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Grounded")
+	bool bRotateR = false;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Anim Graph - Grounded")
+	bool bPivot = false;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Grounded")
+	float RotateRate = 1.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Grounded")
+	float RotationScale = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Grounded")
+	float DiagonalScaleAmount = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Grounded")
+	float WalkRunBlend = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Grounded")
+	float StandingPlayRate = 1.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Grounded")
+	float CrouchingPlayRate = 1.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Grounded")
+	float StrideBlend = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Grounded")
+	float FYaw = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Grounded")
+	float BYaw = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Grounded")
+	float LYaw = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Grounded")
+	float RYaw = 0.0f;
+};
+
+USTRUCT(BlueprintType)
+struct FOnaVelocityBlend
+{
+	GENERATED_BODY()
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Grounded")
+	float F = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Grounded")
+	float B = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Grounded")
+	float L = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Grounded")
+	float R = 0.0f;
+};
+
+USTRUCT(BlueprintType)
+struct FOnaLeanAmount
+{
+	GENERATED_BODY()
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Grounded")
+	float LR = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Grounded")
+	float FB = 0.0f;
+};
+
+USTRUCT(BlueprintType)
+struct FOnaGroundedEntryState
+{
+	GENERATED_BODY()
+
+private:
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Breakfall System")
+	EOnaGroundedEntryState State = EOnaGroundedEntryState::None;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Breakfall System")
+	bool None_ = true;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Breakfall System")
+	bool Roll_ = false;
+
+public:
+	FOnaGroundedEntryState()
+	{
+	}
+
+	FOnaGroundedEntryState(const EOnaGroundedEntryState InitialState) { *this = InitialState; }
+
+	const bool& None() const { return None_; }
+	const bool& Roll() const { return Roll_; }
+
+	operator FOnaGroundedEntryState() const { return State; }
+
+	void operator=(const EOnaGroundedEntryState NewState)
+	{
+		State = NewState;
+		None_ = State == EOnaGroundedEntryState::None;
+		Roll_ = State == EOnaGroundedEntryState::Roll;
+	}
+};
+
+USTRUCT(BlueprintType)
+struct FOnaMovementDirection
+{
+	GENERATED_BODY()
+
+private:
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Movement System")
+	EOnaMovementDirection MovementDirection = EOnaMovementDirection::Forward;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Movement System")
+	bool Forward_ = true;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Movement System")
+	bool Right_ = false;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Movement System")
+	bool Left_ = false;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Movement System")
+	bool Backward_ = false;
+
+public:
+	FOnaMovementDirection()
+	{
+	}
+
+	FOnaMovementDirection(const EOnaMovementDirection InitialMovementDirection)
+	{
+		*this = InitialMovementDirection;
+	}
+
+	const bool& Forward() const { return Forward_; }
+	const bool& Right() const { return Right_; }
+	const bool& Left() const { return Left_; }
+	const bool& Backward() const { return Backward_; }
+
+	operator FOnaMovementDirection() const { return MovementDirection; }
+
+	void operator=(const EOnaMovementDirection NewMovementDirection)
+	{
+		MovementDirection = NewMovementDirection;
+		Forward_ = MovementDirection == EOnaMovementDirection::Forward;
+		Right_ = MovementDirection == EOnaMovementDirection::Right;
+		Left_ = MovementDirection == EOnaMovementDirection::Left;
+		Backward_ = MovementDirection == EOnaMovementDirection::Backward;
+	}
+};
+
+
 /**
  * 
  */
@@ -474,6 +647,26 @@ public:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Character Information")
 	FOnaOverlayState OverlayState = EOnaOverlayState::Default;
 	
+	/** Anim Graph - Grounded */
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Anim Graph - Grounded", Meta = (
+		ShowOnlyInnerProperties))
+	FOnaAnimGraphGrounded Grounded;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Anim Graph - Grounded")
+	FOnaVelocityBlend VelocityBlend;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Anim Graph - Grounded")
+	FOnaLeanAmount LeanAmount;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Anim Graph - Grounded")
+	FVector RelativeAccelerationAmount = FVector::ZeroVector;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Anim Graph - Grounded")
+	FOnaGroundedEntryState GroundedEntryState = EOnaGroundedEntryState::None;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Anim Graph - Grounded")
+	FOnaMovementDirection MovementDirection = EOnaMovementDirection::Forward;
+
 	/** Anim Graph - Layer Blending */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Anim Graph - Layer Blending", Meta = (
 		ShowOnlyInnerProperties))
