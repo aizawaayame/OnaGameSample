@@ -26,11 +26,17 @@ AOnaCharacterBase::AOnaCharacterBase(const FObjectInitializer& ObjectInitializer
 	
 }
 
+void AOnaCharacterBase::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	OnaCharacterMovement = Cast<UOnaCharacterMovementComponent>(Super::GetMovementComponent());
+}
+
 void AOnaCharacterBase::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+	
 	SetEssentialValues(DeltaSeconds);
-
 	if (MovementState == EOnaMovementState::Grounded)
 	{
 		UpdateCharacterMovement();
@@ -54,15 +60,25 @@ void AOnaCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimePropert
 	
 	DOREPLIFETIME_CONDITION(AOnaCharacterBase, ReplicatedCurrentAcceleration, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(AOnaCharacterBase, ReplicatedControlRotation, COND_SkipOwner);
-	//
-	// DOREPLIFETIME(AOnaCharacterBase, DesiredGait);
-	// DOREPLIFETIME_CONDITION(AOnaCharacterBase, DesiredStance, COND_SkipOwner);
-	// DOREPLIFETIME_CONDITION(AOnaCharacterBase, DesiredRotationMode, COND_SkipOwner);
+
+	DOREPLIFETIME(AOnaCharacterBase, DesiredGait);
+	DOREPLIFETIME_CONDITION(AOnaCharacterBase, DesiredStance, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(AOnaCharacterBase, DesiredRotationMode, COND_SkipOwner);
 
 	DOREPLIFETIME_CONDITION(AOnaCharacterBase, RotationMode, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(AOnaCharacterBase, OverlayState, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(AOnaCharacterBase, ViewMode, COND_SkipOwner);
 	// DOREPLIFETIME_CONDITION(AOnaCharacterBase, VisibleMesh, COND_SkipOwner);
+}
+
+void AOnaCharacterBase::SetGait(EOnaGait NewGait, bool bForce)
+{
+	if (bForce || Gait != NewGait)
+	{
+		const EOnaGait  Prev = Gait;
+		Gait = NewGait;
+		OnGaitChanged(Prev);
+	}
 }
 
 /*
@@ -90,6 +106,143 @@ void AOnaCharacterBase::GetCameraParameters(float& TPFOVOut, float& FPFOVOut, bo
 	TPFOVOut = ThirdPersonFOV;
 	FPFOVOut = FirstPersonFOV;
 	bRightShoulderOut = bRightShoulder;
+}
+
+FOnaMovementSettings AOnaCharacterBase::GetTargetMovementSettings() const
+{
+	if (RotationMode == EOnaRotationMode::VelocityDirection)
+	{
+		if (Stance == EOnaStance::Standing)
+		{
+			return MovementData.VelocityDirection.Standing;
+		}
+		if (Stance == EOnaStance::Crouching)
+		{
+			return MovementData.VelocityDirection.Crouching;
+		}
+	}
+	else if (RotationMode == EOnaRotationMode::LookingDirection)
+	{
+		if (Stance == EOnaStance::Standing)
+		{
+			return MovementData.LookingDirection.Standing;
+		}
+		if (Stance == EOnaStance::Crouching)
+		{
+			return MovementData.LookingDirection.Crouching;
+		}
+	}
+	else if (RotationMode == EOnaRotationMode::Aiming)
+	{
+		if (Stance == EOnaStance::Standing)
+		{
+			return MovementData.Aiming.Standing;
+		}
+		if (Stance == EOnaStance::Crouching)
+		{
+			return MovementData.Aiming.Crouching;
+		}
+	}
+
+	return MovementData.VelocityDirection.Standing;
+}
+
+/**
+ * \brief 计算AllowedGait，代表角色允许使用的最大Gait 
+ * \return  
+ */
+EOnaGait AOnaCharacterBase::GetAllowedGait() const
+{
+	if (Stance == EOnaStance::Standing)
+	{
+		if (RotationMode != EOnaRotationMode::Aiming)
+		{
+			if (DesiredGait == EOnaGait::Sprinting)
+			{
+				return CanSprint() ? EOnaGait::Sprinting : EOnaGait::Running;
+			}
+			return DesiredGait;
+		}
+	}
+
+	if (DesiredGait == EOnaGait::Sprinting)
+	{
+		return EOnaGait::Running;
+	}
+
+	return DesiredGait;
+}
+
+/**
+ * \brief 计算角色由Movement决定的实际Gait
+ * 如从Walking切换到Running，只有当速度超过阈值时才会进行真正的切换
+ * \param AllowedGait 
+ * \return  
+ */
+EOnaGait AOnaCharacterBase::GetActualGait(EOnaGait AllowedGait) const
+{
+	const float LocWalkSpeed = OnaCharacterMovement->CurrentMovementSettings.WalkSpeed;
+	const float LocRunSpeed = OnaCharacterMovement->CurrentMovementSettings.RunSpeed;
+	if (Speed > LocRunSpeed + 10.f)
+	{
+		if (AllowedGait == EOnaGait::Sprinting)
+		{
+			return EOnaGait::Sprinting;
+		}
+		return EOnaGait::Running;
+	}
+
+	if (Speed >= LocWalkSpeed + 10.f)
+	{
+		return EOnaGait::Running;
+	}
+
+	return EOnaGait::Walking;
+	
+}
+
+bool AOnaCharacterBase::CanSprint() const
+{
+	if (!bHasMovementInput || RotationMode == EOnaRotationMode::Aiming)
+	{
+		return false;
+	}
+
+	const bool bValidInputAmount = MovementInputAmount > 0.9f;
+
+	if (RotationMode == EOnaRotationMode::VelocityDirection)
+	{
+		return bValidInputAmount;
+	}
+	
+	if (RotationMode == EOnaRotationMode::LookingDirection)
+	{
+		// const float YawDelta = UKismetMathLibrary::NormalizedDeltaRotator(AimingRotation, GetActorRotation()).Yaw;
+		// return bValidInputAmount && FMath::Abs(YawDelta) < 50.f;
+		
+		const FRotator AccRot = ReplicatedCurrentAcceleration.ToOrientationRotator();
+		FRotator Delta = AccRot - AimingRotation;
+		Delta.Normalize();
+		return bValidInputAmount && FMath::Abs(Delta.Yaw) < 50.0f;
+	}
+
+	return false;
+}
+
+/**
+ * \brief 计算角色在地面上的旋转速率
+ * - 获取映射后的速度值(MappedSpeed 0，1，2，3)
+ * - 根据映射速度获取对应旋转速率曲线的对应值
+ * - 将 AimYawRate映射到 1.0 到 3.0 之间，输入范围是 0.0 到 300.0
+ * - 最后将曲线值与映射后的瞄准偏航速率相乘得到最终的旋转速率
+ * \return  
+ */
+float AOnaCharacterBase::CalculateGroundedRotationRate() const
+{
+	const float MappedSpeedVal = OnaCharacterMovement->GetMappedSpeed();
+	const float CurveVal = OnaCharacterMovement->CurrentMovementSettings.RotationRateCurve->GetFloatValue(MappedSpeedVal);
+	const float ClampedAimYawRate = FMath::GetMappedRangeValueClamped<float, float>({0.0f, 300.0f}, {1.0f, 3.0f}, AimYawRate);
+	return CurveVal * ClampedAimYawRate;
 }
 
 void AOnaCharacterBase::SetMovementState(EOnaMovementState NewState, bool bForce)
@@ -176,7 +329,14 @@ void AOnaCharacterBase::OnLandFrictionReset()
  */
 void AOnaCharacterBase::UpdateCharacterMovement()
 {
-	
+	const EOnaGait AllowedGait = GetAllowedGait();
+	const EOnaGait ActualGait = GetActualGait(AllowedGait);
+	if (ActualGait != Gait)
+	{
+		SetGait(ActualGait);
+	}
+
+	OnaCharacterMovement->SetAllowedGait(AllowedGait);
 }
 
 //TODO
@@ -187,6 +347,7 @@ void AOnaCharacterBase::UpdateGroundedRotation(float DeltaTime)
 		const bool bCanUpdateRotation = (bIsMoving && bHasMovementInput || Speed > 150.f) && !HasAnyRootMotion();
 		if (bCanUpdateRotation)
 		{
+			const float GroundedRotationRate = CalculateGroundedRotationRate();
 			
 		}
 		else

@@ -8,9 +8,12 @@
 #include "Enums/OnaStance.h"
 #include "Enums/OnaViewMode.h"
 #include "GameFramework/Character.h"
+#include "Structs/OnaMovementSettings.h"
+#include "Structs/OnaMovementStateSettings.h"
 #include "OnaCharacterBase.generated.h"
 
 
+class UOnaCharacterMovementComponent;
 class UOnaPlayerCameraBehavior;
 
 UCLASS(Blueprintable, BlueprintType)
@@ -20,6 +23,8 @@ class ALS_API AOnaCharacterBase : public ACharacter
 public:
 	AOnaCharacterBase(const FObjectInitializer& ObjectInitializer);
 
+	virtual void PostInitializeComponents() override;
+	
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	
@@ -46,9 +51,6 @@ public:
 
 	UFUNCTION(BlueprintGetter, Category = "Essential Information")
 	FORCEINLINE float GetAimYawRate() const { return AimYawRate; }
-
-	UFUNCTION(BlueprintGetter, Category = "Essential Information")
-	FORCEINLINE bool HasMovementInput() const { return bHasMovementInput; }
 #pragma endregion
 
 #pragma region Character State Getter/Setter
@@ -81,6 +83,9 @@ public:
 
 	UFUNCTION(BlueprintGetter, Category = "Character States")
 	FORCEINLINE EOnaGait GetGait() const { return Gait;}
+
+	UFUNCTION(BlueprintCallable, Category = "Character States")
+	void SetGait(EOnaGait NewGait, bool bForce = false);
 	
 	UFUNCTION(BlueprintGetter, Category = "Character States")
 	FORCEINLINE EOnaOverlayState GetOverlayState() const { return OverlayState;}
@@ -99,6 +104,24 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Camera System")
 	void GetCameraParameters(float& TPFOVOut, float& FPFOVOut, bool& bRightShoulderOut) const;
 #pragma endregion
+
+#pragma region Movement System
+	UFUNCTION(BlueprintGetter, Category = "Movement System")
+	FORCEINLINE bool HasMovementInput() const { return bHasMovementInput; }
+
+	UFUNCTION(BlueprintCallable, Category = "Movement System")
+	FOnaMovementSettings GetTargetMovementSettings() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Movement System")
+	EOnaGait GetAllowedGait() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Movement System")
+	EOnaGait GetActualGait(EOnaGait AllowedGait) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Movement System")
+	
+	bool CanSprint() const;
+#pragma endregion
 	
 #pragma region Input
 
@@ -114,7 +137,6 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Input")
 	void CameraRightAction(float Value);
 #pragma endregion
-
 
 #pragma region Replication
 	UFUNCTION(Category = "Replication")
@@ -174,20 +196,43 @@ protected:
 
 	float CalculateGroundedRotationRate() const;
 	
-#pragma endregion 
+#pragma endregion
+	
 #pragma endregion 
 
 protected:
 	
 #pragma region Props
+
+#pragma region Component
+	UPROPERTY()
+	TObjectPtr<UOnaCharacterMovementComponent> OnaCharacterMovement;
+#pragma endregion
 	
 #pragma region Input
+	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite, Category = "Input")
+	EOnaRotationMode DesiredRotationMode = EOnaRotationMode::LookingDirection;
+
+	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite, Category = "Input")
+	EOnaGait DesiredGait = EOnaGait::Running;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "Input")
+	EOnaStance DesiredStance = EOnaStance::Standing;
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Input", BlueprintReadOnly)
 	float LookUpDownRate = 1.25f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input", BlueprintReadOnly)
 	float LookLeftRightRate = 1.25f;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "Input", BlueprintReadOnly)
+	float RollDoubleTapTimeout = 0.3f;
+
+	UPROPERTY(Category = "Input", BlueprintReadOnly)
+	bool bBreakFall = false;
+
+	UPROPERTY(Category = "Input", BlueprintReadOnly)
+	bool bSprintHeld = false;
 #pragma endregion
 	
 #pragma region State Values
@@ -222,7 +267,7 @@ protected:
 	int32 OverlayOverrideState = 0;
 #pragma endregion
 
-#pragma region CameraSystem
+#pragma region Camera System
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Camera System")
 	float ThirdPersonFOV = 90.0f;
 
@@ -234,6 +279,12 @@ protected:
 
 #pragma endregion 
 
+#pragma region Movement System
+	UPROPERTY(BlueprintReadOnly, Category = "Movement System")
+	FOnaMovementStateSettings MovementData;
+	
+#pragma endregion
+	
 #pragma region Rotation System
 	UPROPERTY(BlueprintReadOnly, Category = "Rotation System")
 	FRotator TargetRotation = FRotator::ZeroRotator;
@@ -244,7 +295,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Rotation System")
 	float YawOffset = 0.0f;
 #pragma endregion
-
+	
 #pragma region Essential Information
 	UPROPERTY(BlueprintReadOnly, Category = "Essential Information")
 	FVector Acceleration = FVector::ZeroVector;
