@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 #include "Enums/OnaGait.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Structs/OnaMovementSettings.h"
+#include "Structs/OnaMovementStructs.h"
 
 #include "OnaCharacterMovementComponent.generated.h"
 

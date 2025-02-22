@@ -8,8 +8,7 @@
 #include "Enums/OnaStance.h"
 #include "Enums/OnaViewMode.h"
 #include "GameFramework/Character.h"
-#include "Structs/OnaMovementSettings.h"
-#include "Structs/OnaMovementStateSettings.h"
+#include "Structs/OnaMovementStructs.h"
 #include "OnaCharacterBase.generated.h"
 
 

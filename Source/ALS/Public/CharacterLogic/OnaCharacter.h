@@ -4,9 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "OnaCharacterBase.h"
-#include "GameFramework/Character.h"
-#include "Structs/OnaMovementSettings.h"
-#include "Structs/OnaMovementSettings_State.h"
 #include "OnaCharacter.generated.h"
 
 enum class EOnaOverlayState : uint8;
