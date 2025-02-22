@@ -32,35 +32,35 @@ public:
 	virtual void NativeBeginPlay() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
-	UFUNCTION(BlueprintCallable, Category = "Animation")
+	UFUNCTION(BlueprintCallable, Category = "ALS|Animation")
 	void PlayTransition(const FOnaDynamicMontageParams& Parameters);
 	
-	UFUNCTION(BlueprintCallable, Category = "Animation")
+	UFUNCTION(BlueprintCallable, Category = "ALS|Animation")
 	void PlayTransitionChecked(const FOnaDynamicMontageParams& Parameters);
 	
-	UFUNCTION(BlueprintCallable, Category = "Animation")
+	UFUNCTION(BlueprintCallable, Category = "ALS|Animation")
 	void PlayDynamicTransition(float ReTriggerDelay, FOnaDynamicMontageParams Parameters);
 
-	UFUNCTION(BlueprintCallable, Category = "Event")
+	UFUNCTION(BlueprintCallable, Category = "ALS|Event")
 	void OnJumped();
 
-	UFUNCTION(BlueprintCallable, Category = "Event")
+	UFUNCTION(BlueprintCallable, Category = "ALS|Event")
 	void OnPivot();
 	
 protected:
 
-	UFUNCTION(BlueprintCallable, Category = "Grounded")
+	UFUNCTION(BlueprintCallable, Category = "ALS|Grounded")
 	FORCEINLINE void SetTrackedHipsDirection(EOnaHipsDirection HipsDirection) { Grounded.TrackedHipsDirection = HipsDirection; }
 
-	UFUNCTION(BlueprintCallable, Category = "Grounded")
+	UFUNCTION(BlueprintCallable, Category = "ALS|Grounded")
 	FORCEINLINE void SetGroundedEntryState(EOnaGroundedEntryState NewState) { GroundedEntryState = NewState; }
 
 	/** Enable Movement Animations if IsMoving and HasMovementInput, or if the Speed is greater than 150. */
-	UFUNCTION(BlueprintCallable, Category = "Grounded")
+	UFUNCTION(BlueprintCallable, Category = "ALS|Grounded")
 	bool ShouldMoveCheck() const;
 
 	/** Only perform a Rotate In Place Check if the character is Aiming or in First Person. */
-	UFUNCTION(BlueprintCallable, Category = "Grounded")
+	UFUNCTION(BlueprintCallable, Category = "ALS|Grounded")
 	bool CanRotateInPlace() const;
 
 	/**
@@ -68,7 +68,7 @@ protected:
 	 * and if the "Enable Transition" curve is fully weighted. The Enable_Transition curve is modified within certain
 	 * states of the AnimBP so that the character can only turn while in those states..
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Grounded")
+	UFUNCTION(BlueprintCallable, Category = "ALS|Grounded")
 	bool CanTurnInPlace() const;
 
 	/**
@@ -76,7 +76,7 @@ protected:
 	 * The Enable_Transition curve is modified within certain states of the AnimBP so
 	 * that the character can only transition while in those states.
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Grounded")
+	UFUNCTION(BlueprintCallable, Category = "ALS|Grounded")
 	bool CanDynamicTransition() const;
 
 private:
@@ -155,122 +155,122 @@ private:
 	
 public:
 	/** References */
-	UPROPERTY(BlueprintReadOnly, Category = "Read Only Data|Character Information")
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|Read Only Data|Character Information")
 	TObjectPtr<AOnaCharacterBase> Character = nullptr;
 
 	/** Character Information */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Character Information", Meta = (
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Character Information", Meta = (
 		ShowOnlyInnerProperties))
 	FOnaAnimCharacterInfo CharacterInformation;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Character Information")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Character Information")
 	FOnaMovementState MovementState = EOnaMovementState::None;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Character Information")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Character Information")
 	FOnaMovementAction MovementAction = EOnaMovementAction::None;
 	
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Character Information")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Character Information")
 	FOnaRotationMode RotationMode = EOnaRotationMode::VelocityDirection;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Character Information")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Character Information")
 	FOnaGait Gait = EOnaGait::Walking;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Character Information")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Character Information")
 	FOnaStance Stance = EOnaStance::Standing;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Character Information")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Character Information")
 	FOnaOverlayState OverlayState = EOnaOverlayState::Default;
 	
 	/** Anim Graph - Grounded */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Anim Graph - Grounded", Meta = (
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Grounded", Meta = (
 		ShowOnlyInnerProperties))
 	FOnaAnimGraphGrounded Grounded;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Anim Graph - Grounded")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Grounded")
 	FOnaVelocityBlend VelocityBlend;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Anim Graph - Grounded")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Grounded")
 	FOnaLeanAmount LeanAmount;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Anim Graph - Grounded")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Grounded")
 	FVector RelativeAccelerationAmount = FVector::ZeroVector;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Anim Graph - Grounded")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Grounded")
 	FOnaGroundedEntryState GroundedEntryState = EOnaGroundedEntryState::None;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Anim Graph - Grounded")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Grounded")
 	FOnaMovementDirection MovementDirection = EOnaMovementDirection::Forward;
 
 	/** Anim Graph - In Air */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Anim Graph - In Air", Meta = (
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - In Air", Meta = (
 		ShowOnlyInnerProperties))
 	FOnaAnimGraphInAir InAir;
 
 	/** Anim Graph - Aiming Values */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Anim Graph - Aiming Values", Meta = (
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Aiming Values", Meta = (
 		ShowOnlyInnerProperties))
 	FOnaAnimGraphAimingValues AimingValues;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Anim Graph - Aiming Values")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Aiming Values")
 	FVector2D SmoothedAimingAngle = FVector2D::ZeroVector;
 	
 	/** Anim Graph - Layer Blending */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Anim Graph - Layer Blending", Meta = (
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Layer Blending", Meta = (
 		ShowOnlyInnerProperties))
 	FOnaAnimGraphLayerBlending LayerBlendingValues;
 
 	/** Turn In Place */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Turn In Place", Meta = (
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|Configuration|Turn In Place", Meta = (
 		ShowOnlyInnerProperties))
 	FOnaAnimTurnInPlace TurnInPlaceValues;
 
 	/** Rotate In Place */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Rotate In Place", Meta = (
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|Configuration|Rotate In Place", Meta = (
 		    ShowOnlyInnerProperties))
 	FOnaAnimRotateInPlace RotateInPlace;
 
 	/** Configuration */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Main Configuration", Meta = (
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|Configuration|Main Configuration", Meta = (
 		ShowOnlyInnerProperties))
 	FOnaAnimConfiguration Config;
 
 	/** Blend Curves */
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Blend Curves")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|Configuration|Blend Curves")
 	TObjectPtr<UCurveFloat> DiagonalScaleAmountCurve = nullptr;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Blend Curves")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|Configuration|Blend Curves")
 	TObjectPtr<UCurveFloat> StrideBlend_N_Walk = nullptr;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Blend Curves")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|Configuration|Blend Curves")
 	TObjectPtr<UCurveFloat> StrideBlend_N_Run = nullptr;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Blend Curves")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|Configuration|Blend Curves")
 	TObjectPtr<UCurveFloat> StrideBlend_C_Walk = nullptr;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Blend Curves")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|Configuration|Blend Curves")
 	TObjectPtr<UCurveFloat> LandPredictionCurve = nullptr;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Blend Curves")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|Configuration|Blend Curves")
 	TObjectPtr<UCurveFloat> LeanInAirCurve = nullptr;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Blend Curves")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|Configuration|Blend Curves")
 	TObjectPtr<UCurveVector> YawOffset_FB = nullptr;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Blend Curves")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|Configuration|Blend Curves")
 	TObjectPtr<UCurveVector> YawOffset_LR = nullptr;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Dynamic Transition")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|Configuration|Dynamic Transition")
 	TObjectPtr<UAnimSequenceBase> TransitionAnim_R = nullptr;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Dynamic Transition")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|Configuration|Dynamic Transition")
 	TObjectPtr<UAnimSequenceBase> TransitionAnim_L = nullptr;
 
 	/** IK Bone Names */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Anim Graph - Foot IK")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|Configuration|Anim Graph - Foot IK")
 	FName IkFootL_BoneName = FName(TEXT("ik_foot_l"));
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Configuration|Anim Graph - Foot IK")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|Configuration|Anim Graph - Foot IK")
 	FName IkFootR_BoneName = FName(TEXT("ik_foot_r"));
 
 private:

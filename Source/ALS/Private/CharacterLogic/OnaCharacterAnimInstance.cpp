@@ -424,6 +424,9 @@ float UOnaCharacterAnimInstance::CalculateStandingPlayRate() const
 						0.0f, 3.0f);	
 }
 
+/**
+ * \brief TODO
+ */
 float UOnaCharacterAnimInstance::CalculateDiagonalScaleAmount() const
 {
 	// Calculate the Diagonal Scale Amount. This value is used to scale the Foot IK Root bone to make the Foot IK bones
