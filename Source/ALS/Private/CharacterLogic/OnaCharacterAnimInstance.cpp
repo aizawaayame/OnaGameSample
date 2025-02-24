@@ -7,6 +7,7 @@
 #include "Curves/CurveVector.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
+
 static const FName NAME_BasePose_CLF(TEXT("BasePose_CLF"));
 static const FName NAME_BasePose_N(TEXT("BasePose_N"));
 static const FName NAME_Enable_FootIK_R(TEXT("Enable_FootIK_R"));
@@ -73,7 +74,7 @@ void UOnaCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	Gait = Character->GetGait();
 	OverlayState = Character->GetOverlayState();
 
-	if (MovementState.GetGroundedRef())
+	if (MovementState.IsGrounded())
 	{
 		const bool bPrevShouldMove = Grounded.bShouldMove;
 		Grounded.bShouldMove = ShouldMoveCheck();
@@ -115,7 +116,7 @@ void UOnaCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 			}
 		}
 	}
-	else if (MovementState.GetInAirRef())
+	else if (MovementState.IsInAir())
 	{
 		
 	}
@@ -237,7 +238,7 @@ bool UOnaCharacterAnimInstance::ShouldMoveCheck() const
  */
 bool UOnaCharacterAnimInstance::CanRotateInPlace() const
 {
-	return RotationMode.GetAimingRef() ||
+	return RotationMode.IsAiming() ||
 		CharacterInformation.ViewMode == EOnaViewMode::FirstPerson;
 }
 
@@ -246,7 +247,7 @@ bool UOnaCharacterAnimInstance::CanRotateInPlace() const
  */
 bool UOnaCharacterAnimInstance::CanTurnInPlace() const
 {
-	return RotationMode.GetLookingDirectionRef() &&
+	return RotationMode.IsLookingDirection() &&
 		CharacterInformation.ViewMode == EOnaViewMode::ThirdPerson &&
 		GetCurveValue(NAME_Enable_Transition) >= 0.99;
 }
@@ -404,7 +405,7 @@ float UOnaCharacterAnimInstance::CalculateStrideBlend() const
 float UOnaCharacterAnimInstance::CalculateWalkRunBlend() const
 {
 	// Calculate the Walk Run Blend. This value is used within the Blendspaces to blend between walking and running.
-	return Gait.GetWalkingRef() ? 0.0f : 1.0;
+	return Gait.IsWalking() ? 0.0f : 1.0;
 }
 
 float UOnaCharacterAnimInstance::CalculateStandingPlayRate() const

@@ -15,6 +15,9 @@
 
 class UCurveVector;
 
+/**
+ * \brief  不同步态速度和步态曲线
+ */
 USTRUCT(BlueprintType)
 struct FOnaMovementSettings
 {
@@ -51,6 +54,9 @@ struct FOnaMovementSettings
 	}
 };
 
+/**
+ * \brief 不同姿势(垂直)的MovementSettings
+ */
 USTRUCT(BlueprintType)
 struct FOnaMovementSettings_Stance
 {
@@ -62,7 +68,10 @@ struct FOnaMovementSettings_Stance
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FOnaMovementSettings Crouching;
 };
- 
+
+/**
+ * \brief 不同状态下的MovementSettings 
+ */
 USTRUCT(BlueprintType)
 struct FOnaMovementSettings_State
 {
@@ -93,6 +102,12 @@ struct FOnaMovementStateSettings : public FTableRowBase
 	FOnaMovementSettings_Stance Aiming;
 };
 
+/**
+ * \brief 当前移动的环境状态
+ * - Grounded
+ * - InAir
+ * - Mantling
+ */
 USTRUCT(BlueprintType)
 struct FOnaMovementState
 {
@@ -121,10 +136,10 @@ public:
 
 	FOnaMovementState(const EOnaMovementState InitialState) { *this = InitialState; }
 
-	const bool& GetNoneRef() const { return None; }
-	const bool& GetGroundedRef() const { return Grounded; }
-	const bool& GetInAirRef() const { return InAir; }
-	const bool& GetMantlingRef() const { return Mantling; }
+	const bool& IsNone() const { return None; }
+	const bool& IsGrounded() const { return Grounded; }
+	const bool& IsInAir() const { return InAir; }
+	const bool& IsMantling() const { return Mantling; }
 
 	operator EOnaMovementState() const { return State; }
 
@@ -206,8 +221,8 @@ public:
 
 	FOnaStance(const EOnaStance InitStance) { *this = InitStance;}
 
-	const bool& GetStandingRef() const { return Standing;}
-	const bool& GetCrouchingRef() const { return Crouching;}
+	const bool& IsStanding() const { return Standing;}
+	const bool& IsCrouching() const { return Crouching;}
 
 	operator EOnaStance() const {return Stance;}
 
@@ -244,9 +259,9 @@ public:
 
 	FOnaGait(const EOnaGait InitialGait) { *this = InitialGait; }
 
-	const bool& GetWalkingRef() const { return Walking; }
-	const bool& GetRunningRef() const { return Running; }
-	const bool& GetSprintingRef() const { return Sprinting; }
+	const bool& IsWalking() const { return Walking; }
+	const bool& IsRunning() const { return Running; }
+	const bool& IsSprinting() const { return Sprinting; }
 
 	operator EOnaGait() const { return Gait; }
 
@@ -284,9 +299,9 @@ public:
 
 	FOnaRotationMode(const EOnaRotationMode InitialRotationMode) { *this = InitialRotationMode; }
 
-	const bool& GetVelocityDirectionRef() const { return VelocityDirection; }
-	const bool& GetLookingDirectionRef() const { return LookingDirection; }
-	const bool& GetAimingRef() const { return Aiming; }
+	const bool& IsVelocityDirection() const { return VelocityDirection; }
+	const bool& IsLookingDirection() const { return LookingDirection; }
+	const bool& IsAiming() const { return Aiming; }
 
 	operator EOnaRotationMode() const { return RotationMode; }
 
