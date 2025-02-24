@@ -120,6 +120,7 @@ void UOnaCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		
 	}
+	UE_LOG(LogTemp, Warning, TEXT("StrideBlend:%f, Walk/Run:%f, StandingPlayRate:%f"), Grounded.StrideBlend, Grounded.WalkRunBlend, Grounded.StandingPlayRate);
 }
 
 void UOnaCharacterAnimInstance::PlayTransition(const FOnaDynamicMontageParams& Parameters)
