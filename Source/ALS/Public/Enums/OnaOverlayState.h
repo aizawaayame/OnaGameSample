@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "OnaOverlayState.generated.h"
 
-UENUM(BlueprintType)
+UENUM(BlueprintType, meta = (ScriptName = "OverlayState"))
 enum class EOnaOverlayState: uint8
 {
     Default,

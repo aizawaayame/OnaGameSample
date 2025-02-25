@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "OnaMovementAction.generated.h"
 
-UENUM(BlueprintType)
+UENUM(BlueprintType, meta = (ScriptName = "MovementAction"))
 enum class EOnaMovementAction : uint8
 {
 	None,

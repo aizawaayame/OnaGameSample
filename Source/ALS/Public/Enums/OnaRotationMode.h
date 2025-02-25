@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "OnaRotationMode.generated.h"
 
-UENUM(BlueprintType)
+UENUM(BlueprintType, meta = (ScriptName = "RotationMode"))
 enum class EOnaRotationMode : uint8
 {
     VelocityDirection,

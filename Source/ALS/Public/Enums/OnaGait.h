@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "OnaGait.generated.h"
 
-UENUM(BlueprintType)
+UENUM(BlueprintType, meta = (ScriptName = "Gait"))
 enum class EOnaGait : uint8
 {
     Walking,

@@ -7,9 +7,7 @@
 #include "Enums/OnaGait.h"
 #include "Enums/OnaGroundedEntryState.h"
 #include "Enums/OnaHipsDirection.h"
-#include "Enums/OnaMovementAction.h"
 #include "Enums/OnaMovementDirection.h"
-#include "Enums/OnaMovementState.h"
 #include "Enums/OnaOverlayState.h"
 #include "Enums/OnaRotationMode.h"
 #include "Enums/OnaStance.h"
@@ -149,10 +147,9 @@ private:
 
 	EOnaMovementDirection CalculateMovementDirection() const;
 
-	/** Util */
-
+#pragma region Utils
 	float GetAnimCurveClamped(const FName& Name, float Bias, float ClampMin, float ClampMax) const;
-	
+#pragma endregion 
 public:
 	/** References */
 	UPROPERTY(BlueprintReadOnly, Category = "ALS|Read Only Data|Character Information")
@@ -164,10 +161,10 @@ public:
 	FOnaAnimCharacterInfo CharacterInformation;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Character Information")
-	FOnaMovementState MovementState = EOnaMovementState::None;
+	FOnaMovementState MovementState;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Character Information")
-	FOnaMovementAction MovementAction = EOnaMovementAction::None;
+	FOnaMovementAction MovementAction;
 	
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Character Information")
 	FOnaRotationMode RotationMode = EOnaRotationMode::VelocityDirection;
@@ -239,9 +236,15 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|Configuration|Blend Curves")
 	TObjectPtr<UCurveFloat> DiagonalScaleAmountCurve = nullptr;
 
+	/**
+	 * \brief [0-150]->[0.2-1]
+	 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|Configuration|Blend Curves")
 	TObjectPtr<UCurveFloat> StrideBlend_N_Walk = nullptr;
 
+	/**
+	 * \brief [0-350]->[0.2-1]
+	 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|Configuration|Blend Curves")
 	TObjectPtr<UCurveFloat> StrideBlend_N_Run = nullptr;
 

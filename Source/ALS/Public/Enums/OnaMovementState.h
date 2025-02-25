@@ -11,12 +11,11 @@
  *  - InAir
  *  - Mantling
  */
-UENUM(BlueprintType)
+UENUM(BlueprintType, meta = (ScriptName = "MovementState"))
 enum class EOnaMovementState : uint8
 {
 	None,
 	Grounded,
 	InAir,
 	Mantling,
-	MAX
 };

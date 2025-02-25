@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "OnaStance.generated.h"
 
-UENUM(BlueprintType)
+UENUM(BlueprintType, meta = (ScriptName = "Stance"))
 enum class EOnaStance : uint8
 {
 	Standing,

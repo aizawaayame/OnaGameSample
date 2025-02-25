@@ -7,7 +7,11 @@
 #include "Curves/CurveVector.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
-
+/**
+ * \brief 代表当前的站姿
+ * 0. Standing
+ * 1. Crouching
+ */
 static const FName NAME_BasePose_CLF(TEXT("BasePose_CLF"));
 static const FName NAME_BasePose_N(TEXT("BasePose_N"));
 static const FName NAME_Enable_FootIK_R(TEXT("Enable_FootIK_R"));
@@ -33,7 +37,13 @@ static const FName NAME_Mask_LandPrediction(TEXT("Mask_LandPrediction"));
 static const FName NAME__ALSCharacterAnimInstance__RotationAmount(TEXT("RotationAmount"));
 static const FName NAME_VB___foot_target_l(TEXT("VB foot_target_l"));
 static const FName NAME_VB___foot_target_r(TEXT("VB foot_target_r"));
-static const FName NAME_W_Gait(TEXT("W_Gait"));
+/**
+ * \brief 代表当前步态
+ * 1. Walk
+ * 2. Run
+ * 3. Sprint
+ */
+static const FName NAME_W_Gait(TEXT("Weight_Gait"));
 static const FName NAME__ALSCharacterAnimInstance__root(TEXT("root"));
 
 
@@ -120,7 +130,6 @@ void UOnaCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		
 	}
-	UE_LOG(LogTemp, Warning, TEXT("StrideBlend:%f, Walk/Run:%f, StandingPlayRate:%f"), Grounded.StrideBlend, Grounded.WalkRunBlend, Grounded.StandingPlayRate);
 }
 
 void UOnaCharacterAnimInstance::PlayTransition(const FOnaDynamicMontageParams& Parameters)
@@ -220,12 +229,21 @@ float UOnaCharacterAnimInstance::CalculateLandPrediction() const
 
 EOnaMovementDirection UOnaCharacterAnimInstance::CalculateMovementDirection() const
 {
-	return EOnaMovementDirection::Backward;
+	return EOnaMovementDirection::Forward;
 }
 
+/**
+ * \brief 使用指定的偏差值对动画曲线的值进行Clamp。
+ *
+ * \param Name 动画曲线的名称。
+ * \param Bias 在Clamp之前添加到曲线值的偏差。
+ * \param ClampMin Clamp的最小值。
+ * \param ClampMax Clamp的最大值。
+ * \return 动画曲线的Clamped值。
+ */
 float UOnaCharacterAnimInstance::GetAnimCurveClamped(const FName& Name, float Bias, float ClampMin, float ClampMax) const
 {
-	return 0;
+	return FMath::Clamp(GetCurveValue(Name) + Bias, ClampMin, ClampMax);
 }
 
 bool UOnaCharacterAnimInstance::ShouldMoveCheck() const
@@ -387,18 +405,28 @@ FOnaVelocityBlend UOnaCharacterAnimInstance::CalculateVelocityBlend() const
 	return Result;
 }
 
+/**
+ * \brief 计算步幅混合值
+ * 1. 在混合空间中用于缩放步幅(脚部移动距离)，使角色可以以不同的移动速度行走或奔跑
+ * 2. 允许行走和奔跑步态动画独立混合，同时仍然将动画速度与移动速度匹配
+ * 3. 避免角色需要播放半行走+半奔跑的混合动画
+ * 4. 使用曲线将步幅数值映射到速度，以获得最大控制
+ * \return 返回计算得到的步幅混合值 
+ */
 float UOnaCharacterAnimInstance::CalculateStrideBlend() const
 {
-	// Calculate the Stride Blend. This value is used within the blendspaces to scale the stride (distance feet travel)
-	// so that the character can walk or run at different movement speeds.
-	// It also allows the walk or run gait animations to blend independently while still matching the animation speed to
-	// the movement speed, preventing the character from needing to play a half walk+half run blend.
-	// The curves are used to map the stride amount to the speed for maximum control.
+	
 	const float CurveTime = CharacterInformation.Speed / GetOwningComponent()->GetComponentScale().Z;
+	// 0代表Walk，1代表Run或Sprint
 	const float ClampedGait = GetAnimCurveClamped(NAME_W_Gait, -1.0, 0.0f, 1.0f);
+	// 根据曲线获取当前的StrideBlend,[Speed]->[StrideBlend]
+	// Walk or Run
 	const float LerpedStrideBlend =
 		FMath::Lerp(StrideBlend_N_Walk->GetFloatValue(CurveTime), StrideBlend_N_Run->GetFloatValue(CurveTime),
 					ClampedGait);
+
+	UE_LOG(LogTemp, Warning, TEXT("LerpedStrideBlend:%f, StrideBlend_C_Walk:%f"), LerpedStrideBlend, StrideBlend_C_Walk->GetFloatValue(CharacterInformation.Speed));
+	// Stand or Crouch
 	return FMath::Lerp(LerpedStrideBlend, StrideBlend_C_Walk->GetFloatValue(CharacterInformation.Speed),
 					   GetCurveValue(NAME_BasePose_CLF));
 }
@@ -409,21 +437,33 @@ float UOnaCharacterAnimInstance::CalculateWalkRunBlend() const
 	return Gait.IsWalking() ? 0.0f : 1.0;
 }
 
+
+/* \brief 计算角色站立时的动画播放速率
+ * 
+ * 该函数通过以下步骤计算播放速率：
+ * 1. 首先将角色的实际移动速度除以每种步态(行走、奔跑、冲刺)的动画速度
+ * 2. 使用"W_Gait"动画曲线在这些速度之间进行插值，确保播放速率与当前混合的动画保持同步
+ * 3. 将结果除以步幅混合值(StrideBlend)和网格体缩放值
+ *    - 当步幅变小时，播放速率会相应增加
+ *    - 当模型缩放变小时，播放速率也会增加
+ * 4. 最后将结果限制在0.0到3.0之间
+ * 
+ * \return 返回计算得到的动画播放速率(0.0-3.0之间)
+ */
 float UOnaCharacterAnimInstance::CalculateStandingPlayRate() const
 {
-	// Calculate the Play Rate by dividing the Character's speed by the Animated Speed for each gait.
-	// The lerps are determined by the "W_Gait" anim curve that exists on every locomotion cycle so
-	// that the play rate is always in sync with the currently blended animation.
-	// The value is also divided by the Stride Blend and the mesh scale so that the play rate increases as the stride or scale gets smaller
-	const float LerpedSpeed = FMath::Lerp(CharacterInformation.Speed / Config.AnimatedWalkSpeed,
-										  CharacterInformation.Speed / Config.AnimatedRunSpeed,
-										  GetAnimCurveClamped(NAME_W_Gait, -1.0f, 0.0f, 1.0f));
+    // 计算相对标准速度的比例速度(0-1)
+    const float LerpedSpeed = FMath::Lerp(CharacterInformation.Speed / Config.AnimatedWalkSpeed,
+                                         CharacterInformation.Speed / Config.AnimatedRunSpeed,
+                                         GetAnimCurveClamped(NAME_W_Gait, -1.0f, 0.0f, 1.0f));
+    // 如果处于冲刺，应用冲刺的比例速度(0-1)
+    const float SprintAffectedSpeed = FMath::Lerp(LerpedSpeed, CharacterInformation.Speed / Config.AnimatedSprintSpeed,
+                                                 GetAnimCurveClamped(NAME_W_Gait, -2.0f, 0.0f, 1.0f));
 
-	const float SprintAffectedSpeed = FMath::Lerp(LerpedSpeed, CharacterInformation.Speed / Config.AnimatedSprintSpeed,
-												  GetAnimCurveClamped(NAME_W_Gait, -2.0f, 0.0f, 1.0f));
-
-	return FMath::Clamp((SprintAffectedSpeed / Grounded.StrideBlend) / GetOwningComponent()->GetComponentScale().Z,
-						0.0f, 3.0f);	
+	UE_LOG(LogTemp, Warning, TEXT("walkRun:%f,LerpedSpeed:%f, SprintAffectedSpeed%f, z:%f"),GetAnimCurveClamped(NAME_W_Gait, -1.0f, 0.0f, 1.0f) ,LerpedSpeed, SprintAffectedSpeed, GetOwningComponent()->GetComponentScale().Z);
+    // 将播放速度钳制在0-3
+    return FMath::Clamp((SprintAffectedSpeed / Grounded.StrideBlend) / GetOwningComponent()->GetComponentScale().Z,
+                        0.0f, 3.0f);    
 }
 
 /**

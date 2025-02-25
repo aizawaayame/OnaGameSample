@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "OnaViewMode.generated.h"
 
-UENUM(BlueprintType)
+UENUM(BlueprintType, meta = (ScriptName = "ViewMode"))
 enum class EOnaViewMode : uint8
 {
 	FirstPerson,
