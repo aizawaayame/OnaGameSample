@@ -112,6 +112,7 @@ void UOnaCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 				Grounded.bRotateL = false;
 				Grounded.bRotateR = false;
 			}
+			
 			if (CanTurnInPlace())
 			{
 				TurnInPlaceCheck(DeltaSeconds);
@@ -120,6 +121,7 @@ void UOnaCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 			{
 				TurnInPlaceValues.ElapsedDelayTime = 0.0f;
 			}
+			
 			if (CanDynamicTransition())
 			{
 				DynamicTransitionCheck();
