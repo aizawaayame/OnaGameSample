@@ -60,19 +60,19 @@ public:
 	UPROPERTY()
 	EOnaGait AllowedGait = EOnaGait::Walking;
 	
-	UPROPERTY(BlueprintReadOnly, Category = "Movement System")
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|Movement System")
 	FOnaMovementSettings CurrentMovementSettings;
 
 	// Set Movement Curve (Called in every instance)
 	float GetMappedSpeed() const;
 
-	UFUNCTION(BlueprintCallable, Category = "Movement Settings")
+	UFUNCTION(BlueprintCallable, Category = "ALS|Movement Settings")
 	void SetMovementSettings(FOnaMovementSettings NewMovementSettings);
 
 	// Set Max Walking Speed (Called from the owning client)
-	UFUNCTION(BlueprintCallable, Category = "Movement Settings")
+	UFUNCTION(BlueprintCallable, Category = "ALS|Movement Settings")
 	void SetAllowedGait(EOnaGait NewAllowedGait);
 
-	UFUNCTION(Reliable, Server, Category = "Movement Settings")
+	UFUNCTION(Reliable, Server, Category = "ALS|Movement Settings")
 	void Server_SetAllowedGait(EOnaGait NewAllowedGait);
 };

@@ -194,9 +194,24 @@ protected:
 
 #pragma region Utils
 
+	void SmoothCharacterRotation(const FRotator& Target, float TargetInterpSpeed, float ActorInterpSpeed, float DeltaTime);
+
 	float CalculateGroundedRotationRate() const;
+
+	void LimitRotation(float AimYawMin, float AimYawMax, float InterpSpeed, float DeltaTime);
+
 	void SetMovementModel();
-	
+
+	void ForceUpdateCharacterState();
+
+	UFUNCTION(BlueprintCallable, Category = "ALS|Utility")
+	float GetAnimCurveValue(FName CurveName) const;
+
+	// UFUNCTION(BlueprintCallable, Category = "ALS|Utility")
+	// void SetVisibleMesh(USkeletalMesh* NewSkeletalMesh);
+
+	// UFUNCTION(BlueprintCallable, Server, Reliable, Category = "ALS|Utility")
+	// void Server_SetVisibleMesh(USkeletalMesh* NewSkeletalMesh);
 #pragma endregion
 	
 #pragma endregion 

@@ -246,13 +246,17 @@ bool AOnaCharacterBase::CanSprint() const
  * - 根据映射速度获取对应旋转速率曲线的对应值
  * - 将 AimYawRate映射到 1.0 到 3.0 之间，输入范围是 0.0 到 300.0
  * - 最后将曲线值与映射后的瞄准偏航速率相乘得到最终的旋转速率
- * \return  
+ * \return  0-3 * 1-3
  */
 float AOnaCharacterBase::CalculateGroundedRotationRate() const
 {
+	// 映射到0，1，2，3
 	const float MappedSpeedVal = OnaCharacterMovement->GetMappedSpeed();
+	// 曲线由0-3映射到5-20
 	const float CurveVal = OnaCharacterMovement->CurrentMovementSettings.RotationRateCurve->GetFloatValue(MappedSpeedVal);
+	// 将AimYawRate从0-300映射到1-3
 	const float ClampedAimYawRate = FMath::GetMappedRangeValueClamped<float, float>({0.0f, 300.0f}, {1.0f, 3.0f}, AimYawRate);
+	// 0-3 * 1-3
 	return CurveVal * ClampedAimYawRate;
 }
 
@@ -363,15 +367,50 @@ void AOnaCharacterBase::UpdateGroundedRotation(float DeltaTime)
 {
 	if (MovementAction == EOnaMovementAction::None)
 	{
-		const bool bCanUpdateRotation = (bIsMoving && bHasMovementInput || Speed > 150.f) && !HasAnyRootMotion();
-		if (bCanUpdateRotation)
+		if (const bool bCanUpdateRotation = (bIsMoving && bHasMovementInput || Speed > 150.f) && !HasAnyRootMotion())
 		{
 			const float GroundedRotationRate = CalculateGroundedRotationRate();
-			
+			if (RotationMode == EOnaRotationMode::VelocityDirection)
+			{
+				SmoothCharacterRotation({0, LastVelocityRotation.Yaw, 0}, 800.f, GroundedRotationRate, DeltaTime);
+			}
+			else if (RotationMode == EOnaRotationMode::LookingDirection)
+			{
+				float YawValue;
+				if (Gait == EOnaGait::Sprinting)
+				{
+					YawValue = LastVelocityRotation.Yaw;
+				}
+				else
+				{
+					const float YawOffsetCurveVal = GetAnimCurveValue(NAME_YawOffset);
+					YawValue = AimingRotation.Yaw + YawOffsetCurveVal;
+				}
+				SmoothCharacterRotation({0.0f, YawValue, 0.0f}, 500.0f, GroundedRotationRate, DeltaTime);
+			}
+			else if (RotationMode == EOnaRotationMode::Aiming)
+			{
+				const float ControlYaw = AimingRotation.Yaw;
+				SmoothCharacterRotation({0.0f, ControlYaw, 0.0f}, 1000.0f, 20.0f, DeltaTime);
+			}
 		}
 		else
 		{
-			
+			const float RotAmountCurve = GetAnimCurveValue(NAME_RotationAmount);
+			if (FMath::Abs(RotAmountCurve) > 0.001f)
+			{
+				if (GetLocalRole() == ROLE_AutonomousProxy)
+				{
+					TargetRotation.Yaw = UKismetMathLibrary::NormalizeAxis(
+						TargetRotation.Yaw + (RotAmountCurve * (DeltaTime / (1.0f / 30.0f))));
+					SetActorRotation(TargetRotation);
+				}
+				else
+				{
+					AddActorWorldRotation({0, RotAmountCurve * (DeltaTime / (1.0f / 30.0f)), 0});
+				}
+				TargetRotation = GetActorRotation();
+			}
 		}
 	}
 	/*
@@ -385,6 +424,36 @@ void AOnaCharacterBase::UpdateGroundedRotation(float DeltaTime)
 
 void AOnaCharacterBase::UpdateInAirRotation(float DeltaTime)
 {
+}
+
+/**
+ * \brief Constant插值TargetRotation，并以插值后的TargetRotation插值ActorRotation
+ * \param Target TargetRotation的插值目标
+ * \param TargetInterpSpeed TargetRotation的绝对插值速度(InterpConstantTo)
+ * \param ActorInterpSpeed ActorRotation的相对插值速度(InterpTo)
+ * \param DeltaTime
+ */
+void AOnaCharacterBase::SmoothCharacterRotation(const FRotator& Target, float TargetInterpSpeed, float ActorInterpSpeed, float DeltaTime)
+{
+	TargetRotation = FMath::RInterpConstantTo(TargetRotation, Target, DeltaTime, TargetInterpSpeed);
+	SetActorRotation(FMath::RInterpTo(GetActorRotation(), TargetRotation, DeltaTime, ActorInterpSpeed));
+}
+
+void AOnaCharacterBase::LimitRotation(float AimYawMin, float AimYawMax, float InterpSpeed, float DeltaTime)
+{
+}
+
+void AOnaCharacterBase::ForceUpdateCharacterState()
+{
+}
+
+float AOnaCharacterBase::GetAnimCurveValue(FName CurveName) const
+{
+	if (GetMesh()->GetAnimInstance())
+	{
+		return GetMesh()->GetAnimInstance()->GetCurveValue(CurveName);
+	}
+	return 0.f;
 }
 
 void AOnaCharacterBase::OnMovementStateChanged(const EOnaMovementState& PreviousState)
@@ -409,7 +478,7 @@ void AOnaCharacterBase::OnMovementStateChanged(const EOnaMovementState& Previous
 
 void AOnaCharacterBase::SetEssentialValues(float DeltaTime)
 {
-	if (GetLocalRole() == ROLE_SimulatedProxy)
+	if (GetLocalRole() != ROLE_SimulatedProxy)
 	{
 		ReplicatedCurrentAcceleration = GetCharacterMovement()->GetCurrentAcceleration();
 		ReplicatedControlRotation = GetControlRotation();
