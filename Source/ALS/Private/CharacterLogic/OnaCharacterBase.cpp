@@ -209,7 +209,6 @@ EOnaGait AOnaCharacterBase::GetActualGait(EOnaGait AllowedGait) const
 	}
 
 	return EOnaGait::Walking;
-	
 }
 
 bool AOnaCharacterBase::CanSprint() const
@@ -238,6 +237,20 @@ bool AOnaCharacterBase::CanSprint() const
 	}
 
 	return false;
+}
+
+void AOnaCharacterBase::SetDesiredGait(EOnaGait NewGait)
+{
+	DesiredGait = NewGait;
+	if (GetLocalRole() == ROLE_AutonomousProxy)
+	{
+		Server_SetDesiredGait(NewGait);
+	}
+}
+
+void AOnaCharacterBase::Server_SetDesiredGait_Implementation(EOnaGait NewGait)
+{
+	SetDesiredGait(NewGait);
 }
 
 /**
@@ -525,6 +538,30 @@ void AOnaCharacterBase::SetEssentialValues(float DeltaTime)
 	// 通过比较当前和前一个瞄准偏航值，除以增量时间来设置瞄准偏航速率。
 	// 这表示摄像机从左到右旋转的速度。
 	AimYawRate =  FMath::Abs((AimingRotation.Yaw - PreviousAimYaw) / DeltaTime);
+}
+
+void AOnaCharacterBase::WalkAction_Implementation()
+{
+	if (DesiredGait == EOnaGait::Walking)
+	{
+		SetDesiredGait(EOnaGait::Running);
+	}
+	else if (DesiredGait == EOnaGait::Running)
+	{
+		SetDesiredGait(EOnaGait::Walking);
+	}
+}
+
+void AOnaCharacterBase::SprintAction_Implementation(bool bValue)
+{
+	if (bValue)
+	{
+		SetDesiredGait(EOnaGait::Sprinting);
+	}
+	else
+	{
+		SetDesiredGait(EOnaGait::Running);
+	}
 }
 
 void AOnaCharacterBase::OnRep_RotationMode(EOnaRotationMode PrevRotMode)

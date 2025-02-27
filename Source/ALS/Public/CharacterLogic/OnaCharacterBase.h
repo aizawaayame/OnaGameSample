@@ -124,18 +124,30 @@ public:
 #pragma endregion
 	
 #pragma region Input
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Input")
+	
+	UFUNCTION(BlueprintCallable, Category = "ALS|Character States")
+	void SetDesiredGait(EOnaGait NewGait);
+	
+	UFUNCTION(BlueprintCallable, Server, Reliable, Category = "ALS|Character States")
+	void Server_SetDesiredGait(EOnaGait NewGait);
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ALS|Input")
 	void ForwardMovementAction(float Value);
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Input")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="ALS|Input")
 	void RightMovementAction(float Value);
 	
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Input")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "ALS|Input")
 	void CameraUpAction(float Value);
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Input")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "ALS|Input")
 	void CameraRightAction(float Value);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "ALS|Input")
+	void WalkAction();
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "ALS|Input")
+	void SprintAction(bool bValue);
 #pragma endregion
 
 #pragma region Replication
@@ -229,6 +241,7 @@ protected:
 	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite, Category = "ALS|Input")
 	EOnaRotationMode DesiredRotationMode = EOnaRotationMode::LookingDirection;
 
+	// 期望的步态，直接决定于当前Controlled的输入(步态切换按键)
 	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite, Category = "ALS|Input")
 	EOnaGait DesiredGait = EOnaGait::Running;
 

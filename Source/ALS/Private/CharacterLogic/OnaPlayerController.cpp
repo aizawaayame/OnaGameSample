@@ -176,7 +176,7 @@ void AOnaPlayerController::SprintAction(const FInputActionValue& Value)
 {
 	if (PossessedCharacter)
 	{
-		// PossessedCharacter->SprintAction(Value.Get<bool>());
+		PossessedCharacter->SprintAction(Value.Get<bool>());
 	}
 }
 
@@ -198,6 +198,10 @@ void AOnaPlayerController::StanceAction(const FInputActionValue& Value)
 
 void AOnaPlayerController::WalkAction(const FInputActionValue& Value)
 {
+	if (PossessedCharacter && Value.Get<bool>())
+	{
+		PossessedCharacter->WalkAction();
+	}
 }
 
 void AOnaPlayerController::VelocityDirectionAction(const FInputActionValue& Value)
