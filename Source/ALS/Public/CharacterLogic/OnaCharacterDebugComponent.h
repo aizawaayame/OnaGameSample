@@ -3,6 +3,7 @@
 #include "CollisionShape.h"
 #include "Components/ActorComponent.h"
 #include "OnaCharacterDebugComponent.generated.h"
+
 class AOnaCharacterBase;
 class USkeletalMesh;
 
@@ -124,27 +125,26 @@ protected:
 	void DetectDebuggableCharactersInWorld();
 	
 public:
-	UPROPERTY(BlueprintReadOnly, Category= "Debug")
+	UPROPERTY(BlueprintReadOnly, Category= "ALS|Debug")
 	TObjectPtr<AOnaCharacterBase> OwnerCharacter;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category= "Debug")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category= "ALS|Debug")
 	bool bSlomo = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category= "Debug")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category= "ALS|Debug")
 	bool bShowHud = false;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category= "Debug")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category= "ALS|Debug")
 	bool bShowCharacterInfo =false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category= "Debug")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category= "ALS|Debug")
 	TObjectPtr<USkeletalMesh> DebugSkeletalMesh;
 
-	UPROPERTY(BlueprintReadOnly, Category= "Debug")
-	TArray<TObjectPtr<AOnaCharacterBase>> AvaliableDebugCharacters;
+	UPROPERTY(BlueprintReadOnly, Category= "ALS|Debug")
+	TArray<TObjectPtr<AOnaCharacterBase>> AvailableDebugCharacters;
 
-	UPROPERTY(BlueprintReadOnly, Category= "Debug")
+	UPROPERTY(BlueprintReadOnly, Category= "ALS|Debug")
 	TObjectPtr<AOnaCharacterBase> DebugFocusCharacter = nullptr;
-
 
 private:
 	static bool bDebugView;
@@ -164,5 +164,5 @@ private:
 
 	/// Stores the index, which is used to select the next focused debug ALSBaseCharacter.
 	/// If no characters where found during BeginPlay the value should be set to INDEX_NONE.
-	int32 FocusDebugCharacterIndex = INDEX_NONE;
+	int32 FocusedDebugCharacterIndex = INDEX_NONE;
 };

@@ -359,9 +359,7 @@ void AOnaCharacterBase::OnLandFrictionReset()
 }
 
 /**
- * \brief TODO 
- * \param ... 
- * \return  
+ * \brief 每帧更新Character的Gait 
  */
 void AOnaCharacterBase::UpdateCharacterMovement()
 {
@@ -375,30 +373,42 @@ void AOnaCharacterBase::UpdateCharacterMovement()
 	OnaCharacterMovement->SetAllowedGait(AllowedGait);
 }
 
-//TODO
+/**
+ * \brief 更新Character的Rotation 
+ */
 void AOnaCharacterBase::UpdateGroundedRotation(float DeltaTime)
 {
 	if (MovementAction == EOnaMovementAction::None)
 	{
-		if (const bool bCanUpdateRotation = (bIsMoving && bHasMovementInput || Speed > 150.f) && !HasAnyRootMotion())
+		const bool bCanUpdateRotation = (bIsMoving && bHasMovementInput || Speed > 150.f) && !HasAnyRootMotion();
+		/*
+		 * 移动中
+		 * - Sprint，保持当前速度方向
+		 * - Walk and Run ，更新TargetRotation并应用到Actor上
+		 */
+		if (bCanUpdateRotation)
 		{
 			const float GroundedRotationRate = CalculateGroundedRotationRate();
 			if (RotationMode == EOnaRotationMode::VelocityDirection)
 			{
 				SmoothCharacterRotation({0, LastVelocityRotation.Yaw, 0}, 800.f, GroundedRotationRate, DeltaTime);
 			}
+			// default
 			else if (RotationMode == EOnaRotationMode::LookingDirection)
 			{
 				float YawValue;
+				// Sprint时，保持当前速度的Yaw
 				if (Gait == EOnaGait::Sprinting)
 				{
 					YawValue = LastVelocityRotation.Yaw;
 				}
+				// 取平滑插值的ControlRotation.Yaw
 				else
 				{
 					const float YawOffsetCurveVal = GetAnimCurveValue(NAME_YawOffset);
 					YawValue = AimingRotation.Yaw + YawOffsetCurveVal;
 				}
+				// 平滑应用到Character的Rotation上
 				SmoothCharacterRotation({0.0f, YawValue, 0.0f}, 500.0f, GroundedRotationRate, DeltaTime);
 			}
 			else if (RotationMode == EOnaRotationMode::Aiming)
@@ -407,6 +417,7 @@ void AOnaCharacterBase::UpdateGroundedRotation(float DeltaTime)
 				SmoothCharacterRotation({0.0f, ControlYaw, 0.0f}, 1000.0f, 20.0f, DeltaTime);
 			}
 		}
+		// 非移动中，更新TargetRotation
 		else
 		{
 			const float RotAmountCurve = GetAnimCurveValue(NAME_RotationAmount);

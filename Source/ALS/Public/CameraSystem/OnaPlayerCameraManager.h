@@ -11,23 +11,27 @@ class AOnaCharacterBase;
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable, BlueprintType)
 class ALS_API AOnaPlayerCameraManager : public APlayerCameraManager
 {
 	GENERATED_BODY()
 public:
 	AOnaPlayerCameraManager();
 public:
-	UFUNCTION(BlueprintCallable,  Category = "Camera")
+	UFUNCTION(BlueprintCallable,  Category = "ALS|Camera")
 	void OnPossess(AOnaCharacterBase* NewCharacter);
 
-	UFUNCTION(BlueprintCallable, Category = "Camera")
+	UFUNCTION(BlueprintCallable, Category = "ALS|Camera")
 	float GetCameraBehaviorParam(FName CurveName) const;
+
+	/** Implemented debug logic in BP */
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "ALS|Camera")
+	void DrawDebugTargets(FVector PivotTargetLocation);
 protected:
 	
 	virtual void UpdateViewTargetInternal(FTViewTarget& VTOut, float DeltaTime) override;
 
-	UFUNCTION(BlueprintCallable, Category = "Camera")
+	UFUNCTION(BlueprintCallable, Category = "ALS|Camera")
 	bool CustomCameraBehavior(float DeltaTime, FVector& LocationOut, FRotator& RotationOut, float& FOVPOut);
 
 #pragma region Props

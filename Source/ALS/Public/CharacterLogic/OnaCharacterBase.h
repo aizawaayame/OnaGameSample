@@ -332,10 +332,10 @@ protected:
 	FVector Acceleration = FVector::ZeroVector;
 
 	UPROPERTY(BlueprintReadOnly, Category = "ALS|Essential Information")
-	bool bIsMoving = false;
-
+	bool bIsMoving = false; // Speed > 0，Update in Tick
+	
 	UPROPERTY(BlueprintReadOnly, Category = "ALS|Essential Information")
-	bool bHasMovementInput = false;
+	bool bHasMovementInput = false; // MovementInputAmount > 0，Update in Tick
 
 	UPROPERTY(BlueprintReadOnly, Category = "ALS|Essential Information")
 	FRotator LastVelocityRotation;
@@ -344,13 +344,15 @@ protected:
 	FRotator LastMovementInputRotation;
 
 	UPROPERTY(BlueprintReadOnly, Category = "ALS|Essential Information")
-	float Speed = 0.0f;
+	float Speed = 0.0f; // CurrentVel.Size2D(), Update in Tick
 
 	UPROPERTY(BlueprintReadOnly, Category = "ALS|Essential Information")
 	float MovementInputAmount = 0.0f;
 
 	UPROPERTY(BlueprintReadOnly, Category = "ALS|Essential Information")
 	float AimYawRate = 0.0f;
+
+	FRotator AimingRotation = FRotator::ZeroRotator; // 每帧平滑插值到ReplicatedControlRotation(GetControlRotation), Update in Tick
 #pragma endregion 
 	
 #pragma region Cached Essential Information
@@ -361,7 +363,7 @@ protected:
 	
 #pragma region Replicated Essential Information
 	UPROPERTY(BlueprintReadOnly, Replicated, Category = "ALS|Essential Information")
-	FRotator ReplicatedControlRotation = FRotator::ZeroRotator;
+	FRotator ReplicatedControlRotation = FRotator::ZeroRotator; // GetControlRotation, Update in Tick
 	
 	UPROPERTY(BlueprintReadOnly, Category = "ALS|Essential Information")
 	float EasedMaxAcceleration = 0.0f;
@@ -372,9 +374,6 @@ protected:
 	
 	UPROPERTY(BlueprintReadOnly, Category = "ALS|Camera")
 	TObjectPtr<UOnaPlayerCameraBehavior> CameraBehavior;
-	
-	/* Smooth out aiming by interping control rotation*/
-	FRotator AimingRotation = FRotator::ZeroRotator;
 	
 #pragma endregion
 	
