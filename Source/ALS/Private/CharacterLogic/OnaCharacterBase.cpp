@@ -2,6 +2,7 @@
 #include "CharacterLogic/OnaCharacterBase.h"
 
 #include "CameraSystem/OnaPlayerCameraBehavior.h"
+#include "CharacterLogic/OnaCharacterDebugComponent.h"
 #include "CharacterLogic/OnaCharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
@@ -35,12 +36,34 @@ void AOnaCharacterBase::PostInitializeComponents()
 void AOnaCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
-
+	// If we're in networked game, disable curved movement
+	// bEnableNetworkOptimizations = !IsNetMode(NM_Standalone);
+	
 	GetMesh()->AddTickPrerequisiteActor(this);
-
 	SetMovementModel();
 
+	ForceUpdateCharacterState();
+	if (Stance == EOnaStance::Standing)
+	{
+		UnCrouch();
+	}
+	else if (Stance == EOnaStance::Crouching)
+	{
+		Crouch();
+	}
+
+	TargetRotation = GetActorRotation();
+	LastVelocityRotation = TargetRotation;
+	LastMovementInputRotation = TargetRotation;
+
+	// ROLE_SimulatedProxy下，不应用RootMotion
+	if (GetMesh()->GetAnimInstance() && GetLocalRole() == ROLE_SimulatedProxy)
+	{
+		GetMesh()->GetAnimInstance()->SetRootMotionMode(ERootMotionMode::IgnoreRootMotion);
+	}
+	
 	OnaCharacterMovement->SetMovementSettings(GetTargetMovementSettings());
+	OnaDebugComponent = FindComponentByClass<UOnaCharacterDebugComponent>();
 }
 
 void AOnaCharacterBase::Tick(float DeltaSeconds)

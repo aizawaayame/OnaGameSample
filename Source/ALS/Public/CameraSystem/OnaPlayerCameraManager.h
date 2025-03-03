@@ -69,7 +69,7 @@ protected:
 	FVector DebugViewOffset;
 private:
 	UPROPERTY()
-	TObjectPtr<UOnaCharacterDebugComponent> DebugComponent = nullptr;	
+	TObjectPtr<UOnaCharacterDebugComponent> OnaDebugComponent = nullptr;	
 #pragma endregion
 
 #pragma region Static Funcs

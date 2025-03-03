@@ -12,6 +12,7 @@
 #include "OnaCharacterBase.generated.h"
 
 
+class UOnaCharacterDebugComponent;
 class UOnaCharacterMovementComponent;
 class UOnaPlayerCameraBehavior;
 
@@ -377,5 +378,8 @@ protected:
 	
 #pragma endregion
 	
+private:
+	UPROPERTY()
+	TObjectPtr<UOnaCharacterDebugComponent> OnaDebugComponent = nullptr;
 };
 

@@ -53,7 +53,7 @@ void AOnaPlayerCameraManager::OnPossess(AOnaCharacterBase* NewCharacter)
 	SetActorLocation(TPSLoc);
 	SmoothedPivotTarget.SetLocation(TPSLoc);
 
-	DebugComponent = ControlledCharacter->FindComponentByClass<UOnaCharacterDebugComponent>();
+	OnaDebugComponent = ControlledCharacter->FindComponentByClass<UOnaCharacterDebugComponent>();
 }
 
 /**
@@ -213,21 +213,20 @@ bool AOnaPlayerCameraManager::CustomCameraBehavior(float DeltaTime, FVector& Loc
 	const FCollisionShape SphereCollisionShape = FCollisionShape::MakeSphere(TraceRadius);
 	const bool bHit = World->SweepSingleByChannel(HitResult, TraceOrigin, TargetCameraLocation, FQuat::Identity,
 	                                              TraceChannel, SphereCollisionShape, Params);
-
-	// TODO
-	// if (ALSDebugComponent && ALSDebugComponent->GetShowTraces())
-	// {
-	// 	UALSDebugComponent::DrawDebugSphereTraceSingle(World,
-	// 	                                               TraceOrigin,
-	// 	                                               TargetCameraLocation,
-	// 	                                               SphereCollisionShape,
-	// 	                                               EDrawDebugTrace::Type::ForOneFrame,
-	// 	                                               bHit,
-	// 	                                               HitResult,
-	// 	                                               FLinearColor::Red,
-	// 	                                               FLinearColor::Green,
-	// 	                                               5.0f);
-	// }
+	
+	if (OnaDebugComponent && OnaDebugComponent->GetShowTraces())
+	{
+		UOnaCharacterDebugComponent::DrawDebugSphereTraceSingle(World,
+		                                               TraceOrigin,
+		                                               TargetCameraLocation,
+		                                               SphereCollisionShape,
+		                                               EDrawDebugTrace::Type::ForOneFrame,
+		                                               bHit,
+		                                               HitResult,
+		                                               FLinearColor::Red,
+		                                               FLinearColor::Green,
+		                                               5.0f);
+	}
 
 	if (HitResult.IsValidBlockingHit())
 	{
