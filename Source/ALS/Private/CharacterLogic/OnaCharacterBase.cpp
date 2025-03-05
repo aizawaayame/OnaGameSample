@@ -4,6 +4,8 @@
 #include "CameraSystem/OnaPlayerCameraBehavior.h"
 #include "CharacterLogic/OnaCharacterDebugComponent.h"
 #include "CharacterLogic/OnaCharacterMovementComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Curves/CurveFloat.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 
@@ -113,6 +115,26 @@ void AOnaCharacterBase::SetGait(EOnaGait NewGait, bool bForce)
 		Gait = NewGait;
 		OnGaitChanged(Prev);
 	}
+}
+
+void AOnaCharacterBase::SetOverlayState(EOnaOverlayState NewState, bool bForce)
+{
+	if (bForce || OverlayState != NewState)
+	{
+		const EOnaOverlayState Prev = OverlayState;
+		OverlayState = NewState;
+		OnOverlayStateChanged(Prev);
+
+		if (GetLocalRole() == ROLE_AutonomousProxy)
+		{
+			Server_SetOverlayState(NewState, bForce);
+		}
+	}
+}
+
+void AOnaCharacterBase::Server_SetOverlayState_Implementation(EOnaOverlayState NewState, bool bForce)
+{
+	SetOverlayState(NewState, bForce);
 }
 
 /*
@@ -262,6 +284,47 @@ bool AOnaCharacterBase::CanSprint() const
 	return false;
 }
 
+void AOnaCharacterBase::Replicated_PlayMontage_Implementation(UAnimMontage* Montage, float PlayRate)
+{
+	if (GetMesh()->GetAnimInstance())
+	{
+		GetMesh()->GetAnimInstance()->Montage_Play(Montage, PlayRate);
+	}
+	Server_PlayMontage(Montage, PlayRate);
+}
+
+void AOnaCharacterBase::Server_PlayMontage_Implementation(UAnimMontage* Montage, float PlayRate)
+{
+	if (GetMesh()->GetAnimInstance())
+	{
+		GetMesh()->GetAnimInstance()->Montage_Play(Montage, PlayRate);
+	}
+	ForceNetUpdate();
+	Multicast_PlayMontage(Montage, PlayRate);
+}
+
+void AOnaCharacterBase::Multicast_PlayMontage_Implementation(UAnimMontage* Montage, float PlayRate)
+{
+	if (GetMesh()->GetAnimInstance() && !IsLocallyControlled())
+	{
+		GetMesh()->GetAnimInstance()->Montage_Play(Montage, PlayRate);
+	}
+}
+
+void AOnaCharacterBase::SetDesiredStance(EOnaStance NewStance)
+{
+	DesiredStance = NewStance;
+	if (GetLocalRole() == ROLE_AutonomousProxy)
+	{
+		Server_SetDesiredStance(NewStance);
+	}
+}
+
+void AOnaCharacterBase::Server_SetDesiredStance_Implementation(EOnaStance NewStance)
+{
+	SetDesiredStance(NewStance);
+}
+
 void AOnaCharacterBase::SetDesiredGait(EOnaGait NewGait)
 {
 	DesiredGait = NewGait;
@@ -312,6 +375,66 @@ void AOnaCharacterBase::SetMovementState(EOnaMovementState NewState, bool bForce
 		MovementState = NewState;
 		OnMovementStateChanged(PrevMovementState);
 	}
+}
+
+void AOnaCharacterBase::SetMovementAction(EOnaMovementAction NewAction, bool bForce)
+{
+	if (bForce || MovementAction != NewAction)
+	{
+		const EOnaMovementAction Prev = MovementAction;
+		MovementAction = NewAction;
+		OnMovementActionChanged(Prev);
+	}
+}
+
+void AOnaCharacterBase::SetViewMode(EOnaViewMode NewViewMode, bool bForce)
+{
+	if (bForce || ViewMode != NewViewMode)
+	{
+		const EOnaViewMode Prev = ViewMode;
+		ViewMode = NewViewMode;
+		OnViewModeChanged(Prev);
+
+		if (GetLocalRole() == ROLE_AutonomousProxy)
+		{
+			Server_SetViewMode(NewViewMode, bForce);
+		}
+	}
+}
+
+void AOnaCharacterBase::SetStance(EOnaStance NewStance, bool bForce)
+{
+	if (bForce || Stance != NewStance)
+	{
+		const EOnaStance Prev = Stance;
+		Stance = NewStance;
+		OnStanceChanged(Prev);
+	}
+}
+
+void AOnaCharacterBase::SetRotationMode(EOnaRotationMode NewRotationMode, bool bForce)
+{
+	if (bForce || RotationMode != NewRotationMode)
+	{
+		const EOnaRotationMode Prev = RotationMode;
+		RotationMode = NewRotationMode;
+		OnRotationModeChanged(Prev);
+
+		if (GetLocalRole() == ROLE_AutonomousProxy)
+		{
+			Server_SetRotationMode(NewRotationMode, bForce);
+		}
+	}
+}
+
+void AOnaCharacterBase::Server_SetRotationMode_Implementation(EOnaRotationMode NewRotationMode, bool bForce)
+{
+	SetRotationMode(NewRotationMode, bForce);
+}
+
+void AOnaCharacterBase::Server_SetViewMode_Implementation(EOnaViewMode NewViewMode, bool bForce)
+{
+	SetViewMode(NewViewMode, bForce);
 }
 
 void AOnaCharacterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
@@ -492,6 +615,13 @@ void AOnaCharacterBase::LimitRotation(float AimYawMin, float AimYawMax, float In
 
 void AOnaCharacterBase::ForceUpdateCharacterState()
 {
+	SetGait(DesiredGait, true);
+	SetStance(DesiredStance, true);
+	SetRotationMode(DesiredRotationMode, true);
+	SetViewMode(ViewMode, true);
+	SetOverlayState(OverlayState, true);
+	SetMovementState(MovementState, true);
+	SetMovementAction(MovementAction, true);
 }
 
 float AOnaCharacterBase::GetAnimCurveValue(FName CurveName) const
@@ -598,20 +728,64 @@ void AOnaCharacterBase::SprintAction_Implementation(bool bValue)
 	}
 }
 
+void AOnaCharacterBase::StanceAction_Implementation()
+{
+	if (MovementAction != EOnaMovementAction::None)
+		return;
+
+	UWorld* World = GetWorld();
+	check(World);
+
+	const float PrevStanceInputTime = LastStanceInputTime;
+	LastStanceInputTime = World->GetTimeSeconds();
+
+	if (LastStanceInputTime - PrevStanceInputTime <= RollDoubleTapTimeout)
+	{
+		Replicated_PlayMontage(GetRollAnimation(), 1.15f);
+		if (Stance == EOnaStance::Standing)
+		{
+			SetDesiredStance(EOnaStance::Crouching);
+		}
+		else if (Stance == EOnaStance::Crouching)
+		{
+			SetDesiredStance(EOnaStance::Standing);
+		}
+		return;
+	}
+
+	if (MovementState == EOnaMovementState::Grounded)
+	{
+		if (Stance == EOnaStance::Standing)
+		{
+			SetDesiredStance(EOnaStance::Crouching);
+			Crouch();
+		}
+		else if (Stance == EOnaStance::Crouching)
+		{
+			SetDesiredStance(EOnaStance::Standing);
+			UnCrouch();
+		}
+	}
+}
+
 void AOnaCharacterBase::OnRep_RotationMode(EOnaRotationMode PrevRotMode)
 {
+	OnRotationModeChanged(PrevRotMode);
 }
 
 void AOnaCharacterBase::OnRep_ViewMode(EOnaViewMode PrevViewMode)
 {
+	OnViewModeChanged(PrevViewMode);
 }
 
 void AOnaCharacterBase::OnRep_OverlayState(EOnaOverlayState PrevOverlayState)
 {
+	OnOverlayStateChanged(PrevOverlayState);
 }
 
 void AOnaCharacterBase::OnRep_VisibleMesh(const USkeletalMesh* PreviousSkeletalMesh)
 {
+	OnVisibleMeshChanged(PreviousSkeletalMesh);
 }
 
 void AOnaCharacterBase::ForwardMovementAction_Implementation(float Value)

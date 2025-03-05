@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "CoreMinimal.h"
+#include "Engine/DataTable.h"
 #include "Enums/OnaGait.h"
 #include "Enums/OnaMovementAction.h"
 #include "Enums/OnaMovementState.h"
@@ -62,6 +63,9 @@ public:
 
 	UFUNCTION(BlueprintGetter, Category = "Character States")
 	FORCEINLINE EOnaMovementAction GetMovementAction() const { return MovementAction;}
+
+	UFUNCTION(BlueprintCallable, Category = "ALS|Character States")
+	void SetMovementAction(EOnaMovementAction NewAction, bool bForce = false);
 	
 	UFUNCTION(BlueprintGetter, Category = "Character States")
 	FORCEINLINE EOnaMovementState GetPrevMovementState() const { return PrevMovementState; }
@@ -69,6 +73,13 @@ public:
 	UFUNCTION(BlueprintGetter, Category = "Character States")
 	FORCEINLINE EOnaViewMode GetViewMode() const { return ViewMode; }
 
+	UFUNCTION(BlueprintCallable, Category = "ALS|Character States")
+	void SetViewMode(EOnaViewMode NewViewMode, bool bForce = false);
+
+	UFUNCTION(BlueprintCallable, Server, Reliable, Category = "ALS|Character States")
+	void Server_SetViewMode(EOnaViewMode NewViewMode, bool bForce);
+	
+	
 	UFUNCTION(BlueprintGetter, Category = "Character States")
 	FORCEINLINE int32 GetOverlayOverrideState() const { return OverlayOverrideState; }
 	
@@ -78,9 +89,18 @@ public:
 	UFUNCTION(BlueprintGetter, Category = "Character States")
 	FORCEINLINE EOnaStance GetStance() const { return Stance;}
 
+	UFUNCTION(BlueprintCallable, Category = "ALS|Character States")
+	void SetStance(EOnaStance NewStance, bool bForce = false);
+	
 	UFUNCTION(BlueprintGetter, Category = "Character States")
 	FORCEINLINE EOnaRotationMode GetRotationMode() const { return RotationMode;}
 
+	UFUNCTION(BlueprintCallable, Category = "ALS|Character States")
+	void SetRotationMode(EOnaRotationMode NewRotationMode, bool bForce = false);
+
+	UFUNCTION(BlueprintCallable, Server, Reliable, Category = "ALS|Character States")
+	void Server_SetRotationMode(EOnaRotationMode NewRotationMode, bool bForce);
+	
 	UFUNCTION(BlueprintGetter, Category = "Character States")
 	FORCEINLINE EOnaGait GetGait() const { return Gait;}
 
@@ -89,6 +109,13 @@ public:
 	
 	UFUNCTION(BlueprintGetter, Category = "Character States")
 	FORCEINLINE EOnaOverlayState GetOverlayState() const { return OverlayState;}
+
+	UFUNCTION(BlueprintCallable, Category = "ALS|Character States")
+	void SetOverlayState(EOnaOverlayState NewState, bool bForce = false);
+	
+	UFUNCTION(BlueprintCallable, Server, Reliable, Category = "ALS|Character States")
+	void Server_SetOverlayState(EOnaOverlayState NewState, bool bForce);
+
 #pragma endregion
 	
 #pragma region Camera System
@@ -121,9 +148,35 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Movement System")
 	
 	bool CanSprint() const;
+
+	/** BP implementable function that called when A Montage starts, e.g. during rolling */
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "ALS|Movement System")
+	void Replicated_PlayMontage(UAnimMontage* Montage, float PlayRate);
+	virtual void Replicated_PlayMontage_Implementation(UAnimMontage* Montage, float PlayRate);
+
+	/** Rolling Montage Play Replication*/
+	UFUNCTION(BlueprintCallable, Server, Reliable, Category = "ALS|Character States")
+	void Server_PlayMontage(UAnimMontage* Montage, float PlayRate);
+
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable, Category = "ALS|Character States")
+	void Multicast_PlayMontage(UAnimMontage* Montage, float PlayRate);
+
+	/** Implement on BP to get required roll animation according to character's state */
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "ALS|Movement System")
+	UAnimMontage* GetRollAnimation();
+	
 #pragma endregion
 	
 #pragma region Input
+
+	UFUNCTION(BlueprintGetter, Category = "ALS|Input")
+	EOnaStance GetDesiredStance() const { return DesiredStance; }
+
+	UFUNCTION(BlueprintSetter, Category = "ALS|Input")
+	void SetDesiredStance(EOnaStance NewStance);
+
+	UFUNCTION(BlueprintCallable, Server, Reliable, Category = "ALS|Input")
+	void Server_SetDesiredStance(EOnaStance NewStance);
 	
 	UFUNCTION(BlueprintCallable, Category = "ALS|Character States")
 	void SetDesiredGait(EOnaGait NewGait);
@@ -143,6 +196,9 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "ALS|Input")
 	void CameraRightAction(float Value);
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "ALS|Input")
+	void StanceAction();
+	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "ALS|Input")
 	void WalkAction();
 	
@@ -238,6 +294,7 @@ protected:
 #pragma endregion
 	
 #pragma region Input
+	
 	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite, Category = "ALS|Input")
 	EOnaRotationMode DesiredRotationMode = EOnaRotationMode::LookingDirection;
 
@@ -371,6 +428,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Replicated, Category = "ALS|Essential Information")
 	FVector ReplicatedCurrentAcceleration = FVector::ZeroVector;
 #pragma endregion
+
+	/** Last time the 'first' crouch/roll button is pressed */
+	float LastStanceInputTime = 0.0f;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "ALS|Camera")
 	TObjectPtr<UOnaPlayerCameraBehavior> CameraBehavior;
