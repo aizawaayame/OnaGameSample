@@ -130,7 +130,7 @@ void UOnaCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	}
 	else if (MovementState.IsInAir())
 	{
-		
+		// TODO
 	}
 }
 
@@ -213,6 +213,14 @@ void UOnaCharacterAnimInstance::SetFootOffsets(float DeltaSeconds, FName EnableF
 
 void UOnaCharacterAnimInstance::RotateInPlaceCheck()
 {
+	Grounded.bRotateL = AimingValues.AimingAngle.X < RotateInPlace.RotateMinThreshold;
+	Grounded.bRotateR = AimingValues.AimingAngle.X > RotateInPlace.RotateMaxThreshold;
+
+	if (Grounded.bRotateL || Grounded.bRotateR)
+	{
+		Grounded.RotateRate = FMath::GetMappedRangeValueClamped<float, float>({RotateInPlace.AimYawRateMinRange, RotateInPlace.AimYawRateMaxRange},
+			{RotateInPlace.MinPlayRate, RotateInPlace.MaxPlayRate},CharacterInformation.AimYawRate);
+	}
 }
 
 void UOnaCharacterAnimInstance::TurnInPlace(FRotator TargetRotation, float PlayRateScale, float StartTime, bool OverrideCurrent)
