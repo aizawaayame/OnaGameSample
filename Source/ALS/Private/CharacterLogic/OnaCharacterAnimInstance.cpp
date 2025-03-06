@@ -4,6 +4,8 @@
 #include "CharacterLogic/OnaCharacterAnimInstance.h"
 
 #include "CharacterLogic/OnaCharacterBase.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Curves/CurveFloat.h"
 #include "Curves/CurveVector.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -225,6 +227,11 @@ void UOnaCharacterAnimInstance::RotateInPlaceCheck()
 
 void UOnaCharacterAnimInstance::TurnInPlace(FRotator TargetRotation, float PlayRateScale, float StartTime, bool OverrideCurrent)
 {
+	FRotator Delta = TargetRotation - CharacterInformation.CharacterActorRotation;
+	Delta.Normalize();
+	const float TurnAngle = Delta.Yaw;
+
+	
 }
 
 FVector UOnaCharacterAnimInstance::CalculateRelativeAccelerationAmount() const

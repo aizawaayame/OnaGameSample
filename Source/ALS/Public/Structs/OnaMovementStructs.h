@@ -517,23 +517,3 @@ public:
 	}
 };
 
-USTRUCT(BlueprintType)
-struct FOnaTurnInPlaceAsset
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
-	TObjectPtr<UAnimSequenceBase> Animation = nullptr;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
-	float AnimatedAngle = 0.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
-	FName SlotName = NAME_None;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
-	float PlayRate = 1.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
-	bool ScaleTurnAngle = true;
-};
