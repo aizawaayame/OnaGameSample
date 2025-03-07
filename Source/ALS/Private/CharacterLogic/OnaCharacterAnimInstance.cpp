@@ -326,6 +326,7 @@ void UOnaCharacterAnimInstance::TurnInPlace(FRotator TargetRotation, float PlayR
 	PlaySlotAnimationAsDynamicMontage(TargetTurnAsset.Animation, TargetTurnAsset.SlotName, 0.2f, 0.2f,
 		TargetTurnAsset.PlayRate * PlayRateScale, 1, 0.0f, StartTime);
 
+	// 这段代码效果存疑
 	if (TargetTurnAsset.ScaleTurnAngle)
 	{
 		Grounded.RotationScale = (TurnAngle / TargetTurnAsset.AnimatedAngle) * TargetTurnAsset.PlayRate * PlayRateScale;
