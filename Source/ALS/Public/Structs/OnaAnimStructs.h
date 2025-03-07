@@ -36,10 +36,10 @@ struct FOnaAnimCharacterInfo
 	GENERATED_BODY()
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
-	FRotator AimingRotation = FRotator::ZeroRotator;
+	FRotator AimingRotation = FRotator::ZeroRotator; // 到ReplicatedControlRotation(GetControlRotation)的插值，Update in SetEssentialValues
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
-	FRotator CharacterActorRotation = FRotator::ZeroRotator;
+	FRotator CharacterActorRotation = FRotator::ZeroRotator; // GetActorRotation, Update in SetEssentialValues
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
 	FVector Velocity = FVector::ZeroVector;
@@ -51,7 +51,7 @@ struct FOnaAnimCharacterInfo
 	FVector Acceleration = FVector::ZeroVector;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
-	FVector MovementInput = FVector::ZeroVector;
+	FVector MovementInput = FVector::ZeroVector; // 移动加速度方向向量, ReplicatedCurrentAcceleration，Update in SetEssentialValues，
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
 	bool bIsMoving = false;
@@ -244,9 +244,9 @@ struct FOnaAnimTurnInPlace
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
 	float AimYawRateLimit = 50.0f;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
-	float ElapsedDelayTime = 0.0f;
+	float ElapsedDelayTime = 0.0f; // 启动的已延迟时间，以实现延迟转向
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Turn In Place")
 	float MinAngleDelay = 0.f;
@@ -374,21 +374,32 @@ USTRUCT(BlueprintType)
 struct FOnaAnimGraphAimingValues
 {
 	GENERATED_BODY()
+	
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Aiming Values")
+	FRotator SmoothedAimingRotation = FRotator::ZeroRotator; // RInterpTo(SmoothedAimingRotation, CharacterInformation.AimingRotation, DeltaSeconds, InterpSpeed);
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Aiming Values")
-	FRotator SmoothedAimingRotation = FRotator::ZeroRotator;
+	FRotator SpineRotation = FRotator::ZeroRotator; // 骨盆的旋转量(/4), 让上半身朝向相机方向
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Aiming Values")
-	FRotator SpineRotation = FRotator::ZeroRotator;
+	FVector2D AimingAngle = FVector2D::ZeroVector; // ≈GetActorRotation到GetControlRotation的差值(Normalized), X = Delta.Yaw, Y = Delta.Pitch
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Aiming Values")
-	FVector2D AimingAngle = FVector2D::ZeroVector;
+	FVector2D SmoothedAimingAngle = FVector2D::ZeroVector; // ≈GetActorRotation平滑插值到GetControlRotation的差值(Normalized), X = Delta.Yaw, Y = Delta.Pitch
 
+	/**
+	* \brief  将角色的瞄准俯仰角度（上下看的角度）从 -90° 到 90° 的范围映射到 1.0 到 0.0 的范围。
+	* - 当角色向下看（-90°）时，AimSweepTime 值为 1.0
+	* - 当角色向上看（90°）时，AimSweepTime 值为 0.0
+	* - 当角色水平看（0°）时，AimSweepTime 值为 0.5
+	*
+	* 这个映射值在动画蓝图中用于控制上下瞄准时的姿势混合，使角色能够自然地向上或向下看。值被命名为"AimSweepTime"是因为它作为动画混合空间中的时间参数，控制垂直瞄准姿势的平滑过渡。
+	*/
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Aiming Values")
 	float AimSweepTime = 0.5f;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Aiming Values")
-	float InputYawOffsetTime = 0.0f;
+	float InputYawOffsetTime = 0.0f; // 瞄准偏移过渡时间
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Aiming Values")
 	float ForwardYawTime = 0.0f;

@@ -206,10 +206,9 @@ public:
 	/** Anim Graph - Aiming Values */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Aiming Values", Meta = (
 		ShowOnlyInnerProperties))
-	FOnaAnimGraphAimingValues AimingValues;
+	FOnaAnimGraphAimingValues AimingValues; // 计算原地转向会用到的一系列中间变量, Update in Tick(UpdateAimingValues Func)
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Aiming Values")
-	FVector2D SmoothedAimingAngle = FVector2D::ZeroVector;
+
 	
 	/** Anim Graph - Layer Blending */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Layer Blending", Meta = (

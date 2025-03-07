@@ -116,7 +116,8 @@ void UOnaCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 				Grounded.bRotateL = false;
 				Grounded.bRotateR = false;
 			}
-			
+
+			// 非瞄准原地转向
 			if (CanTurnInPlace())
 			{
 				TurnInPlaceCheck(DeltaSeconds);
@@ -173,44 +174,61 @@ void UOnaCharacterAnimInstance::OnPivotDelay()
 {
 }
 
+// Update In Tick
 void UOnaCharacterAnimInstance::UpdateAimingValues(float DeltaSeconds)
 {
-	// Interp the Aiming Rotation value to achieve smooth aiming rotation changes.
-	// Interpolating the rotation before calculating the angle ensures the value is not affected by changes
-	// in actor rotation, allowing slow aiming rotation changes with fast actor rotation changes.
-
+	// CharacterInformation.AimingRotation为到GetControlRotation的插值
 	AimingValues.SmoothedAimingRotation = FMath::RInterpTo(AimingValues.SmoothedAimingRotation,
 	                                                       CharacterInformation.AimingRotation, DeltaSeconds,
 	                                                       Config.SmoothedAimingRotationInterpSpeed);
 
-	// Calculate the Aiming angle and Smoothed Aiming Angle by getting
-	// the delta between the aiming rotation and the actor rotation.
+	// ≈GetActorRotation到GetControlRotation的差值
 	FRotator Delta = CharacterInformation.AimingRotation - CharacterInformation.CharacterActorRotation;
 	Delta.Normalize();
 	AimingValues.AimingAngle.X = Delta.Yaw;
 	AimingValues.AimingAngle.Y = Delta.Pitch;
-	
+
+	// ≈GetActorRotation平滑插值到GetControlRotation的差值
 	Delta = AimingValues.SmoothedAimingRotation - CharacterInformation.CharacterActorRotation;
 	Delta.Normalize();
-	SmoothedAimingAngle.X = Delta.Yaw;
-	SmoothedAimingAngle.Y = Delta.Pitch;
+	AimingValues.SmoothedAimingAngle.X = Delta.Yaw;
+	AimingValues.SmoothedAimingAngle.Y = Delta.Pitch;
 
 	if (!RotationMode.IsVelocityDirection())
 	{
-		// Clamp the Aiming Pitch Angle to a range of 1 to 0 for use in the vertical aim sweeps.
+		/*
+		 *  将角色的瞄准俯仰角度（上下看的角度）从 -90° 到 90° 的范围映射到 1.0 到 0.0 的范围。
+			当角色向下看（-90°）时，AimSweepTime 值为 1.0
+			当角色向上看（90°）时，AimSweepTime 值为 0.0
+			当角色水平看（0°）时，AimSweepTime 值为 0.5
+			这个映射值在动画蓝图中用于控制上下瞄准时的姿势混合，使角色能够自然地向上或向下看。值被命名为"AimSweepTime"是因为它作为动画混合空间中的时间参数，控制垂直瞄准姿势的平滑过渡。
+		 */
 		AimingValues.AimSweepTime = FMath::GetMappedRangeValueClamped<float, float>({-90.0f, 90.0f}, {1.0f, 0.0f},
 		                                                              AimingValues.AimingAngle.Y);
 
-		// Use the Aiming Yaw Angle divided by the number of spine+pelvis bones to get the amount of spine rotation
-		// needed to remain facing the camera direction.
+		/*
+		 * 计算角色脊柱旋转量，让上半身朝向相机方向
+		 * - 将瞄准的偏航角（水平转动角度）除以脊柱和骨盆骨骼的数量，以得到每个骨骼需要的旋转量。
+		 * - AimingValues.SpineRotation.Roll和AimingValues.SpineRotation.Pitch被设置为0，表示不进行绕前后轴和左右轴的旋转。
+		 * - AimingValues.SpineRotation.Yaw被设置为AimingValues.AimingAngle.X除以4.0f
+		 *		- AimingValues.AimingAngle.X包含了角色朝向与瞄准方向之间的偏航角差值
+		 *		- 除以4.0是将这个旋转分配给多个骨骼（脊柱和骨盆骨骼）
+		 *		- 这种分配方式使得每个骨骼只需旋转一小部分，创建更自然的姿势
+		 * 最终效果为让角色的上半身稍微旋转朝向瞄准方向，当角色看向与行进方向不同的方向时，会形成更真实的姿态。
+		 */
 		AimingValues.SpineRotation.Roll = 0.0f;
 		AimingValues.SpineRotation.Pitch = 0.0f;
 		AimingValues.SpineRotation.Yaw = AimingValues.AimingAngle.X / 4.0f;
 	}
 	else if (CharacterInformation.bHasMovementInput)
 	{
-		// Get the delta between the Movement Input rotation and Actor rotation and map it to a range of 0-1.
-		// This value is used in the aim offset behavior to make the character look toward the Movement Input.
+		/*
+		 * 计算角色的移动输入方向与角色实际朝向之间的差异，并将这个差异映射到0-1的范围内，用于控制瞄准偏移行为
+		 * - 当角色朝向与移动输入方向一致时，值接近0.5
+		 * - 当角色需要向左转才能面向移动方向时，值接近0
+		 * - 当角色需要向右转才能面向移动方向时，值接近1
+		 * 这个映射值InterpTarget将被用于动画系统中的瞄准偏移行为(aim offset)，使角色的上半身可以自然地转向移动输入方向，即使下半身朝向不同。这在后续代码中被用于平滑过渡到InputYawOffsetTime变量，最终影响角色的姿态动画。
+		 */
 		Delta = CharacterInformation.MovementInput.ToOrientationRotator() - CharacterInformation.CharacterActorRotation;
 		Delta.Normalize();
 		const float InterpTarget = FMath::GetMappedRangeValueClamped<float, float>({-180.0f, 180.0f}, {0.0f, 1.0f}, Delta.Yaw);
@@ -219,15 +237,29 @@ void UOnaCharacterAnimInstance::UpdateAimingValues(float DeltaSeconds)
 		                                                   DeltaSeconds, Config.InputYawOffsetInterpSpeed);
 	}
 
-	// Separate the Aiming Yaw Angle into 3 separate Yaw Times. These 3 values are used in the Aim Offset behavior
-	// to improve the blending of the aim offset when rotating completely around the character.
-	// This allows you to keep the aiming responsive but still smoothly blend from left to right or right to left.
+	// 处理角色瞄准时的水平转向角度(Yaw)，将其分解为三个不同的Yaw时间值，用于控制瞄准偏移(Aim Offset)行为。
+	// 这三个值协同工作，在角色完全旋转时提供更自然的瞄准偏移混合效果，特别是让左右转向之间的过渡更平滑，同时保持瞄准的响应性。在动画蓝图中，这些值用于控制不同方向瞄准姿势之间的混合权重。
+	/*
+	 * 当角色向左看时(0°到180°)的平滑过渡值
+	 * 值范围从0.5(直视前方)到0.0(完全向左看)
+	 * 使用角色平滑瞄准角度的绝对值进行计算
+	 */
 	AimingValues.LeftYawTime = FMath::GetMappedRangeValueClamped<float, float>({0.0f, 180.0f}, {0.5f, 0.0f},
-	                                                             FMath::Abs(SmoothedAimingAngle.X));
+	                                                             FMath::Abs(AimingValues.SmoothedAimingAngle.X));
+	/*
+	 * 当角色向右看时(0°到180°)的平滑过渡值
+	 * 值范围从0.5(直视前方)到1.0(完全向右看)
+	 * 同样使用角色平滑瞄准角度的绝对值进行计算
+	 */
 	AimingValues.RightYawTime = FMath::GetMappedRangeValueClamped<float, float>({0.0f, 180.0f}, {0.5f, 1.0f},
-	                                                              FMath::Abs(SmoothedAimingAngle.X));
+	                                                              FMath::Abs(AimingValues.SmoothedAimingAngle.X));
+	/*
+	 * 角色整个360°视野范围内的平滑过渡值
+	 * 值范围从0.0(完全向左看，-180°)到1.0(完全向右看，180°)
+	 * 直接使用角色平滑瞄准角度进行计算
+	 */
 	AimingValues.ForwardYawTime = FMath::GetMappedRangeValueClamped<float, float>({-180.0f, 180.0f}, {0.0f, 1.0f},
-	                                                                SmoothedAimingAngle.X);
+	                                                                AimingValues.SmoothedAimingAngle.X);
 }
 
 void UOnaCharacterAnimInstance::UpdateLayerValues()
@@ -280,6 +312,13 @@ void UOnaCharacterAnimInstance::RotateInPlaceCheck()
 	}
 }
 
+/**
+ * \brief 原地转向
+ * \param TargetRotation 转向目标
+ * \param PlayRateScale 播放速率缩放
+ * \param StartTime 动画开始时间
+ * \param OverrideCurrent 是否覆盖当前动画
+ */
 void UOnaCharacterAnimInstance::TurnInPlace(FRotator TargetRotation, float PlayRateScale, float StartTime, bool OverrideCurrent)
 {
 	FRotator Delta = TargetRotation - CharacterInformation.CharacterActorRotation;
@@ -287,6 +326,7 @@ void UOnaCharacterAnimInstance::TurnInPlace(FRotator TargetRotation, float PlayR
 	const float TurnAngle = Delta.Yaw;
 
 	FOnaTurnInPlaceAsset TargetTurnAsset;
+	// 获取转向资源动画
 	if (Stance.IsStanding())
 	{
 		if (FMath::Abs(TurnAngle) < TurnInPlaceValues.Turn180Threshold)
@@ -323,6 +363,7 @@ void UOnaCharacterAnimInstance::TurnInPlace(FRotator TargetRotation, float PlayR
 		return;
 	}
 
+	// 播放动画
 	PlaySlotAnimationAsDynamicMontage(TargetTurnAsset.Animation, TargetTurnAsset.SlotName, 0.2f, 0.2f,
 		TargetTurnAsset.PlayRate * PlayRateScale, 1, 0.0f, StartTime);
 
@@ -458,8 +499,9 @@ void UOnaCharacterAnimInstance::TurnInPlaceCheck(float DeltaSeconds)
 		return;
 	}
 
-	// 计算平滑过渡所需要的时间
+	// 累加延迟时间
 	TurnInPlaceValues.ElapsedDelayTime += DeltaSeconds;
+	// 将旋转角度映射为延迟时间
 	const float ClampedAimingTime = FMath::GetMappedRangeValueClamped<float, float>({TurnInPlaceValues.TurnCheckMinAngle, 180.0f},
 																	{
 																		TurnInPlaceValues.MinAngleDelay,
@@ -467,7 +509,7 @@ void UOnaCharacterAnimInstance::TurnInPlaceCheck(float DeltaSeconds)
 																	},
 																	AimingValues.AimingAngle.X);
 
-	// Step 2: Check if the Elapsed Delay time exceeds the set delay (mapped to the turn angle range). If so, trigger a Turn In Place.
+	// 超过延迟时间，开始转向
 	if (TurnInPlaceValues.ElapsedDelayTime > ClampedAimingTime)
 	{
 		FRotator TurnInPlaceYawRot = CharacterInformation.AimingRotation;

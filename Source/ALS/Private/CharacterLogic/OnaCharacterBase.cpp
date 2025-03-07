@@ -13,6 +13,7 @@
 const FName NAME_FP_Camera(TEXT("FP_Camera"));
 const FName NAME_Pelvis(TEXT("Pelvis"));
 const FName NAME_RagdollPose(TEXT("RagdollPose"));
+// Turn动画的旋转量，曲线数值为按30帧，每帧的旋转量
 const FName NAME_RotationAmount(TEXT("RotationAmount"));
 const FName NAME_YawOffset(TEXT("YawOffset"));
 const FName NAME_pelvis(TEXT("pelvis"));
@@ -571,7 +572,8 @@ void AOnaCharacterBase::UpdateGroundedRotation(float DeltaTime)
 			{
 				LimitRotation(-100, 100, 20, DeltaTime);
 			}
-			
+
+			// 读取骨骼曲线RotationAmount
 			const float RotAmountCurve = GetAnimCurveValue(NAME_RotationAmount);
 			if (FMath::Abs(RotAmountCurve) > 0.001f)
 			{
