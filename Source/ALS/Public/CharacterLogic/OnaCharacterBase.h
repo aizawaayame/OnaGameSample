@@ -51,7 +51,7 @@ public:
 	FORCEINLINE FRotator GetAimingRotation() const { return AimingRotation; }
 
 	UFUNCTION(BlueprintGetter, Category = "Essential Information")
-	FORCEINLINE float GetAimYawRate() const { return AimYawRate; }
+	FORCEINLINE float GetAimYawRate() const { return AimYawRate; } // 摄像机从左到右旋转的速度, Update in Tick
 #pragma endregion
 
 #pragma region Character State Getter/Setter
@@ -407,7 +407,7 @@ protected:
 	float MovementInputAmount = 0.0f;
 
 	UPROPERTY(BlueprintReadOnly, Category = "ALS|Essential Information")
-	float AimYawRate = 0.0f;
+	float AimYawRate = 0.0f; // 摄像机从左到右旋转的速度, Update in Tick
 
 	FRotator AimingRotation = FRotator::ZeroRotator; // 每帧平滑插值到ReplicatedControlRotation(GetControlRotation), Update in Tick
 #pragma endregion 

@@ -566,6 +566,12 @@ void AOnaCharacterBase::UpdateGroundedRotation(float DeltaTime)
 		// 非移动中，更新TargetRotation
 		else
 		{
+			if (ViewMode == EOnaViewMode::ThirdPerson && RotationMode == EOnaRotationMode::Aiming
+				|| ViewMode == EOnaViewMode::FirstPerson)
+			{
+				LimitRotation(-100, 100, 20, DeltaTime);
+			}
+			
 			const float RotAmountCurve = GetAnimCurveValue(NAME_RotationAmount);
 			if (FMath::Abs(RotAmountCurve) > 0.001f)
 			{

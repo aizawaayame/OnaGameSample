@@ -59,11 +59,6 @@ void AOnaPlayerController::SetupInputComponent()
 		BindActions(DebugInputMappingContext);
 		BindActions(DefaultInputMappingContext);
 	}
-	else
-	{
-		UE_LOG(LogTemp, Fatal, TEXT("ALS Community requires Enhanced Input System to be activated in project settings to function properly"));
-	}
-	
 }
 
 /**

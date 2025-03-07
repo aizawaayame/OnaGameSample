@@ -86,6 +86,8 @@ void UOnaCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	Gait = Character->GetGait();
 	OverlayState = Character->GetOverlayState();
 
+	UpdateAimingValues(DeltaSeconds);
+	
 	if (MovementState.IsGrounded())
 	{
 		const bool bPrevShouldMove = Grounded.bShouldMove;
@@ -173,6 +175,59 @@ void UOnaCharacterAnimInstance::OnPivotDelay()
 
 void UOnaCharacterAnimInstance::UpdateAimingValues(float DeltaSeconds)
 {
+	// Interp the Aiming Rotation value to achieve smooth aiming rotation changes.
+	// Interpolating the rotation before calculating the angle ensures the value is not affected by changes
+	// in actor rotation, allowing slow aiming rotation changes with fast actor rotation changes.
+
+	AimingValues.SmoothedAimingRotation = FMath::RInterpTo(AimingValues.SmoothedAimingRotation,
+	                                                       CharacterInformation.AimingRotation, DeltaSeconds,
+	                                                       Config.SmoothedAimingRotationInterpSpeed);
+
+	// Calculate the Aiming angle and Smoothed Aiming Angle by getting
+	// the delta between the aiming rotation and the actor rotation.
+	FRotator Delta = CharacterInformation.AimingRotation - CharacterInformation.CharacterActorRotation;
+	Delta.Normalize();
+	AimingValues.AimingAngle.X = Delta.Yaw;
+	AimingValues.AimingAngle.Y = Delta.Pitch;
+	
+	Delta = AimingValues.SmoothedAimingRotation - CharacterInformation.CharacterActorRotation;
+	Delta.Normalize();
+	SmoothedAimingAngle.X = Delta.Yaw;
+	SmoothedAimingAngle.Y = Delta.Pitch;
+
+	if (!RotationMode.IsVelocityDirection())
+	{
+		// Clamp the Aiming Pitch Angle to a range of 1 to 0 for use in the vertical aim sweeps.
+		AimingValues.AimSweepTime = FMath::GetMappedRangeValueClamped<float, float>({-90.0f, 90.0f}, {1.0f, 0.0f},
+		                                                              AimingValues.AimingAngle.Y);
+
+		// Use the Aiming Yaw Angle divided by the number of spine+pelvis bones to get the amount of spine rotation
+		// needed to remain facing the camera direction.
+		AimingValues.SpineRotation.Roll = 0.0f;
+		AimingValues.SpineRotation.Pitch = 0.0f;
+		AimingValues.SpineRotation.Yaw = AimingValues.AimingAngle.X / 4.0f;
+	}
+	else if (CharacterInformation.bHasMovementInput)
+	{
+		// Get the delta between the Movement Input rotation and Actor rotation and map it to a range of 0-1.
+		// This value is used in the aim offset behavior to make the character look toward the Movement Input.
+		Delta = CharacterInformation.MovementInput.ToOrientationRotator() - CharacterInformation.CharacterActorRotation;
+		Delta.Normalize();
+		const float InterpTarget = FMath::GetMappedRangeValueClamped<float, float>({-180.0f, 180.0f}, {0.0f, 1.0f}, Delta.Yaw);
+
+		AimingValues.InputYawOffsetTime = FMath::FInterpTo(AimingValues.InputYawOffsetTime, InterpTarget,
+		                                                   DeltaSeconds, Config.InputYawOffsetInterpSpeed);
+	}
+
+	// Separate the Aiming Yaw Angle into 3 separate Yaw Times. These 3 values are used in the Aim Offset behavior
+	// to improve the blending of the aim offset when rotating completely around the character.
+	// This allows you to keep the aiming responsive but still smoothly blend from left to right or right to left.
+	AimingValues.LeftYawTime = FMath::GetMappedRangeValueClamped<float, float>({0.0f, 180.0f}, {0.5f, 0.0f},
+	                                                             FMath::Abs(SmoothedAimingAngle.X));
+	AimingValues.RightYawTime = FMath::GetMappedRangeValueClamped<float, float>({0.0f, 180.0f}, {0.5f, 1.0f},
+	                                                              FMath::Abs(SmoothedAimingAngle.X));
+	AimingValues.ForwardYawTime = FMath::GetMappedRangeValueClamped<float, float>({-180.0f, 180.0f}, {0.0f, 1.0f},
+	                                                                SmoothedAimingAngle.X);
 }
 
 void UOnaCharacterAnimInstance::UpdateLayerValues()
@@ -231,7 +286,54 @@ void UOnaCharacterAnimInstance::TurnInPlace(FRotator TargetRotation, float PlayR
 	Delta.Normalize();
 	const float TurnAngle = Delta.Yaw;
 
-	
+	FOnaTurnInPlaceAsset TargetTurnAsset;
+	if (Stance.IsStanding())
+	{
+		if (FMath::Abs(TurnAngle) < TurnInPlaceValues.Turn180Threshold)
+		{
+			TargetTurnAsset = TurnAngle < 0
+				? TurnInPlaceValues.N_TurnIP_L90
+				: TurnInPlaceValues.N_TurnIP_R90;
+		}
+		else
+		{
+			TargetTurnAsset = TurnAngle < 0
+				? TurnInPlaceValues.N_TurnIP_L180
+				: TurnInPlaceValues.N_TurnIP_R180;
+		}
+	}
+	else
+	{
+		if (FMath::Abs(TurnAngle) < TurnInPlaceValues.Turn180Threshold)
+		{
+			TargetTurnAsset = TurnAngle < 0
+				? TurnInPlaceValues.CLF_TurnIP_L90
+				: TurnInPlaceValues.CLF_TurnIP_R90;
+		}
+		else
+		{
+			TargetTurnAsset = TurnAngle < 0
+				? TurnInPlaceValues.CLF_TurnIP_L180
+				: TurnInPlaceValues.CLF_TurnIP_R180;
+		}
+	}
+
+	if (!OverrideCurrent && IsPlayingSlotAnimation(TargetTurnAsset.Animation, TargetTurnAsset.SlotName))
+	{
+		return;
+	}
+
+	PlaySlotAnimationAsDynamicMontage(TargetTurnAsset.Animation, TargetTurnAsset.SlotName, 0.2f, 0.2f,
+		TargetTurnAsset.PlayRate * PlayRateScale, 1, 0.0f, StartTime);
+
+	if (TargetTurnAsset.ScaleTurnAngle)
+	{
+		Grounded.RotationScale = (TurnAngle / TargetTurnAsset.AnimatedAngle) * TargetTurnAsset.PlayRate * PlayRateScale;
+	}
+	else
+	{
+		Grounded.RotationScale = TargetTurnAsset.PlayRate * PlayRateScale;
+	}
 }
 
 FVector UOnaCharacterAnimInstance::CalculateRelativeAccelerationAmount() const
@@ -345,9 +447,9 @@ void UOnaCharacterAnimInstance::UpdateRotationValues()
 
 void UOnaCharacterAnimInstance::TurnInPlaceCheck(float DeltaSeconds)
 {
-	// Step 1: Check if Aiming angle is outside of the Turn Check Min Angle, and if the Aim Yaw Rate is below the Aim Yaw Rate Limit.
-	// If so, begin counting the Elapsed Delay Time. If not, reset the Elapsed Delay Time.
-	// This ensures the conditions remain true for a sustained period of time before turning in place.
+	// 检查瞄准角度是否超出了转向检查最小角度，以及瞄准偏航速率是否低于瞄准偏航速率限制。
+	// 如果满足条件，则开始计算经过的延迟时间。如果不满足，则重置经过的延迟时间。
+	// 这确保了在原地转向之前，这些条件必须持续一段时间才会触发。
 	if (FMath::Abs(AimingValues.AimingAngle.X) <= TurnInPlaceValues.TurnCheckMinAngle ||
 		CharacterInformation.AimYawRate >= TurnInPlaceValues.AimYawRateLimit)
 	{
@@ -355,8 +457,9 @@ void UOnaCharacterAnimInstance::TurnInPlaceCheck(float DeltaSeconds)
 		return;
 	}
 
+	// 计算平滑过渡所需要的时间
 	TurnInPlaceValues.ElapsedDelayTime += DeltaSeconds;
-	const float ClampedAimAngle = FMath::GetMappedRangeValueClamped<float, float>({TurnInPlaceValues.TurnCheckMinAngle, 180.0f},
+	const float ClampedAimingTime = FMath::GetMappedRangeValueClamped<float, float>({TurnInPlaceValues.TurnCheckMinAngle, 180.0f},
 																	{
 																		TurnInPlaceValues.MinAngleDelay,
 																		TurnInPlaceValues.MaxAngleDelay
@@ -364,7 +467,7 @@ void UOnaCharacterAnimInstance::TurnInPlaceCheck(float DeltaSeconds)
 																	AimingValues.AimingAngle.X);
 
 	// Step 2: Check if the Elapsed Delay time exceeds the set delay (mapped to the turn angle range). If so, trigger a Turn In Place.
-	if (TurnInPlaceValues.ElapsedDelayTime > ClampedAimAngle)
+	if (TurnInPlaceValues.ElapsedDelayTime > ClampedAimingTime)
 	{
 		FRotator TurnInPlaceYawRot = CharacterInformation.AimingRotation;
 		TurnInPlaceYawRot.Roll = 0.0f;
@@ -441,8 +544,7 @@ float UOnaCharacterAnimInstance::CalculateStrideBlend() const
 	const float LerpedStrideBlend =
 		FMath::Lerp(StrideBlend_N_Walk->GetFloatValue(CurveTime), StrideBlend_N_Run->GetFloatValue(CurveTime),
 					ClampedGait);
-
-	UE_LOG(LogTemp, Warning, TEXT("LerpedStrideBlend:%f, StrideBlend_C_Walk:%f"), LerpedStrideBlend, StrideBlend_C_Walk->GetFloatValue(CharacterInformation.Speed));
+	
 	// Stand or Crouch
 	return FMath::Lerp(LerpedStrideBlend, StrideBlend_C_Walk->GetFloatValue(CharacterInformation.Speed),
 					   GetCurveValue(NAME_BasePose_CLF));
@@ -476,8 +578,7 @@ float UOnaCharacterAnimInstance::CalculateStandingPlayRate() const
     // 如果处于冲刺，应用冲刺的比例速度(0-1)
     const float SprintAffectedSpeed = FMath::Lerp(LerpedSpeed, CharacterInformation.Speed / Config.AnimatedSprintSpeed,
                                                  GetAnimCurveClamped(NAME_W_Gait, -2.0f, 0.0f, 1.0f));
-
-	UE_LOG(LogTemp, Warning, TEXT("walkRun:%f,LerpedSpeed:%f, SprintAffectedSpeed%f, z:%f"),GetAnimCurveClamped(NAME_W_Gait, -1.0f, 0.0f, 1.0f) ,LerpedSpeed, SprintAffectedSpeed, GetOwningComponent()->GetComponentScale().Z);
+	
     // 将播放速度钳制在0-3
     return FMath::Clamp((SprintAffectedSpeed / Grounded.StrideBlend) / GetOwningComponent()->GetComponentScale().Z,
                         0.0f, 3.0f);    

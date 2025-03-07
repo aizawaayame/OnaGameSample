@@ -66,7 +66,7 @@ struct FOnaAnimCharacterInfo
 	float MovementInputAmount = 0.0f;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
-	float AimYawRate = 0.0f;
+	float AimYawRate = 0.0f; // 摄像机从左到右旋转的速度, Update in Tick
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
 	float ZoomAmount = 0.0f;
