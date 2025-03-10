@@ -61,6 +61,39 @@ protected:
 	UFUNCTION()
 	void LookingDirectionAction(const FInputActionValue& Value);
 
+	// Debug actions
+	UFUNCTION()
+	void DebugToggleHudAction(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void DebugToggleDebugViewAction(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void DebugToggleTracesAction(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void DebugToggleShapesAction(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void DebugToggleLayerColorsAction(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void DebugToggleCharacterInfoAction(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void DebugToggleSlomoAction(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void DebugFocusedCharacterCycleAction(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void DebugToggleMeshAction(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void DebugOpenOverlayMenuAction(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void DebugOverlayMenuCycleAction(const FInputActionValue& Value);
 public:
 	/** Main character reference */
 	UPROPERTY(BlueprintReadOnly)

@@ -8,6 +8,7 @@
 #include "CameraSystem/OnaPlayerCameraManager.h"
 #include "CharacterLogic/OnaCharacterBase.h"
 #include "CharacterLogic/OnaCharacterDebugComponent.h"
+#include "Engine/LocalPlayer.h"
 
 void AOnaPlayerController::OnPossess(APawn* InPawn)
 {
@@ -106,7 +107,7 @@ void AOnaPlayerController::SetupInputs()
 			FModifyContextOptions Options;
 			Options.bForceImmediately = 1;
 			Subsystem->AddMappingContext(DefaultInputMappingContext, 1, Options);
-			if (UOnaCharacterDebugComponent* DebugComp = Cast<UOnaCharacterDebugComponent>(PossessedCharacter->GetComponentByClass(UOnaCharacterDebugComponent::StaticClass())))
+			if (Cast<UOnaCharacterDebugComponent>(PossessedCharacter->GetComponentByClass(UOnaCharacterDebugComponent::StaticClass())))
 			{
 				Subsystem->AddMappingContext(DebugInputMappingContext, 0, Options);
 			}
@@ -177,18 +178,34 @@ void AOnaPlayerController::SprintAction(const FInputActionValue& Value)
 
 void AOnaPlayerController::AimAction(const FInputActionValue& Value)
 {
+	if (PossessedCharacter)
+	{
+		// PossessedCharacter->AimAction(Value.Get<bool>());
+	}
 }
 
 void AOnaPlayerController::CameraTapAction(const FInputActionValue& Value)
 {
+	if (PossessedCharacter)
+	{
+		// PossessedCharacter->CameraTapAction();
+	}
 }
 
 void AOnaPlayerController::CameraHeldAction(const FInputActionValue& Value)
 {
+	if (PossessedCharacter)
+	{
+		// PossessedCharacter->CameraHeldAction();
+	}
 }
 
 void AOnaPlayerController::StanceAction(const FInputActionValue& Value)
 {
+	if (PossessedCharacter && Value.Get<bool>())
+	{
+		PossessedCharacter->StanceAction();
+	}
 }
 
 void AOnaPlayerController::WalkAction(const FInputActionValue& Value)
@@ -212,5 +229,138 @@ void AOnaPlayerController::LookingDirectionAction(const FInputActionValue& Value
 	if (PossessedCharacter && Value.Get<bool>())
 	{
 		// PossessedCharacter->LookingDirectionAction();
+	}
+}
+
+
+void AOnaPlayerController::DebugToggleHudAction(const FInputActionValue& Value)
+{
+	if (PossessedCharacter && Value.Get<bool>())
+	{
+		UOnaCharacterDebugComponent* DebugComp = Cast<UOnaCharacterDebugComponent>(PossessedCharacter->GetComponentByClass(UOnaCharacterDebugComponent::StaticClass()));
+		if (DebugComp)
+		{
+			DebugComp->ToggleHud();
+		}
+	}
+}
+
+void AOnaPlayerController::DebugToggleDebugViewAction(const FInputActionValue& Value)
+{
+	if (PossessedCharacter && Value.Get<bool>())
+	{
+		UOnaCharacterDebugComponent* DebugComp = Cast<UOnaCharacterDebugComponent>(PossessedCharacter->GetComponentByClass(UOnaCharacterDebugComponent::StaticClass()));
+		if (DebugComp)
+		{
+			DebugComp->ToggleDebugView();
+		}
+	}
+}
+
+void AOnaPlayerController::DebugToggleTracesAction(const FInputActionValue& Value)
+{
+	if (PossessedCharacter && Value.Get<bool>())
+	{
+		UOnaCharacterDebugComponent* DebugComp = Cast<UOnaCharacterDebugComponent>(PossessedCharacter->GetComponentByClass(UOnaCharacterDebugComponent::StaticClass()));
+		if (DebugComp)
+		{
+			DebugComp->ToggleTraces();
+		}
+	}
+}
+
+void AOnaPlayerController::DebugToggleShapesAction(const FInputActionValue& Value)
+{
+	if (PossessedCharacter && Value.Get<bool>())
+	{
+		UOnaCharacterDebugComponent* DebugComp = Cast<UOnaCharacterDebugComponent>(PossessedCharacter->GetComponentByClass(UOnaCharacterDebugComponent::StaticClass()));
+		if (DebugComp)
+		{
+			DebugComp->ToggleDebugShapes();
+		}
+	}
+}
+
+void AOnaPlayerController::DebugToggleLayerColorsAction(const FInputActionValue& Value)
+{
+	if (PossessedCharacter && Value.Get<bool>())
+	{
+		UOnaCharacterDebugComponent* DebugComp = Cast<UOnaCharacterDebugComponent>(PossessedCharacter->GetComponentByClass(UOnaCharacterDebugComponent::StaticClass()));
+		if (DebugComp)
+		{
+			DebugComp->ToggleLayerColors();
+		}
+	}
+}
+
+void AOnaPlayerController::DebugToggleCharacterInfoAction(const FInputActionValue& Value)
+{
+	if (PossessedCharacter && Value.Get<bool>())
+	{
+		UOnaCharacterDebugComponent* DebugComp = Cast<UOnaCharacterDebugComponent>(PossessedCharacter->GetComponentByClass(UOnaCharacterDebugComponent::StaticClass()));
+		if (DebugComp)
+		{
+			DebugComp->ToggleCharacterInfo();
+		}
+	}
+}
+
+void AOnaPlayerController::DebugToggleSlomoAction(const FInputActionValue& Value)
+{
+	if (PossessedCharacter && Value.Get<bool>())
+	{
+		UOnaCharacterDebugComponent* DebugComp = Cast<UOnaCharacterDebugComponent>(PossessedCharacter->GetComponentByClass(UOnaCharacterDebugComponent::StaticClass()));
+		if (DebugComp)
+		{
+			DebugComp->ToggleSlomo();
+		}
+	}
+}
+
+void AOnaPlayerController::DebugFocusedCharacterCycleAction(const FInputActionValue& Value)
+{
+	if (PossessedCharacter)
+	{
+		UOnaCharacterDebugComponent* DebugComp = Cast<UOnaCharacterDebugComponent>(PossessedCharacter->GetComponentByClass(UOnaCharacterDebugComponent::StaticClass()));
+		if (DebugComp)
+		{
+			DebugComp->FocusedDebugCharacterCycle(Value.GetMagnitude() > 0);
+		}
+	}
+}
+
+void AOnaPlayerController::DebugToggleMeshAction(const FInputActionValue& Value)
+{
+	if (PossessedCharacter && Value.Get<bool>())
+	{
+		UOnaCharacterDebugComponent* DebugComp = Cast<UOnaCharacterDebugComponent>(PossessedCharacter->GetComponentByClass(UOnaCharacterDebugComponent::StaticClass()));
+		if (DebugComp)
+		{
+			DebugComp->ToggleDebugMesh();
+		}
+	}
+}
+
+void AOnaPlayerController::DebugOpenOverlayMenuAction(const FInputActionValue& Value)
+{
+	if (PossessedCharacter)
+	{
+		UOnaCharacterDebugComponent* DebugComp = Cast<UOnaCharacterDebugComponent>(PossessedCharacter->GetComponentByClass(UOnaCharacterDebugComponent::StaticClass()));
+		if (DebugComp)
+		{
+			DebugComp->OpenOverlayMenu(Value.Get<bool>());
+		}
+	}
+}
+
+void AOnaPlayerController::DebugOverlayMenuCycleAction(const FInputActionValue& Value)
+{
+	if (PossessedCharacter)
+	{
+		UOnaCharacterDebugComponent* DebugComp = Cast<UOnaCharacterDebugComponent>(PossessedCharacter->GetComponentByClass(UOnaCharacterDebugComponent::StaticClass()));
+		if (DebugComp)
+		{
+			DebugComp->OverlayMenuCycle(Value.GetMagnitude() > 0);
+		}
 	}
 }
