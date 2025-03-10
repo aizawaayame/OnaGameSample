@@ -1,6 +1,4 @@
 
-
-
 #include "CharacterLogic/OnaCharacterAnimInstance.h"
 
 #include "CharacterLogic/OnaCharacterBase.h"
@@ -78,17 +76,17 @@ void UOnaCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	CharacterInformation.CharacterActorRotation = Character->GetActorRotation();
 	CharacterInformation.ViewMode = Character->GetViewMode();
 	CharacterInformation.PrevMovementState = Character->GetPrevMovementState();
-	LayerBlendingValues.OverlayOverrideState = Character->GetOverlayOverrideState();
-	MovementState = Character->GetMovementState();
-	MovementAction = Character->GetMovementAction();
-	Stance = Character->GetStance();
-	RotationMode = Character->GetRotationMode();
-	Gait = Character->GetGait();
-	OverlayState = Character->GetOverlayState();
+	CharacterInformation.LayerBlendingValues.OverlayOverrideState = Character->GetOverlayOverrideState();
+	CharacterInformation.MovementState = Character->GetMovementState();
+	CharacterInformation.MovementAction = Character->GetMovementAction();
+	CharacterInformation.Stance = Character->GetStance();
+	CharacterInformation.RotationMode = Character->GetRotationMode();
+	CharacterInformation.Gait = Character->GetGait();
+	CharacterInformation.OverlayState = Character->GetOverlayState();
 
 	UpdateAimingValues(DeltaSeconds);
 	
-	if (MovementState.IsGrounded())
+	if (CharacterInformation.MovementState.IsGrounded())
 	{
 		const bool bPrevShouldMove = Grounded.bShouldMove;
 		Grounded.bShouldMove = ShouldMoveCheck();
@@ -133,7 +131,7 @@ void UOnaCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 			}
 		}
 	}
-	else if (MovementState.IsInAir())
+	else if (CharacterInformation.MovementState.IsInAir())
 	{
 		// TODO
 	}
@@ -194,7 +192,7 @@ void UOnaCharacterAnimInstance::UpdateAimingValues(float DeltaSeconds)
 	AimingValues.SmoothedAimingAngle.X = Delta.Yaw;
 	AimingValues.SmoothedAimingAngle.Y = Delta.Pitch;
 
-	if (!RotationMode.IsVelocityDirection())
+	if (!CharacterInformation.RotationMode.IsVelocityDirection())
 	{
 		/*
 		 *  将角色的瞄准俯仰角度（上下看的角度）从 -90° 到 90° 的范围映射到 1.0 到 0.0 的范围。
@@ -274,10 +272,6 @@ void UOnaCharacterAnimInstance::UpdateInAirValues(float DeltaSeconds)
 {
 }
 
-void UOnaCharacterAnimInstance::UpdateRagdollValues()
-{
-}
-
 void UOnaCharacterAnimInstance::SetFootLocking(float DeltaSeconds, FName EnableFootIKCurve, FName FootLockCurve, FName IKFootBone, float& CurFootLockAlpha, bool& UseFootLockCurve,
 	FVector& CurFootLockLoc, FRotator& CurFootLockRot)
 {
@@ -327,7 +321,7 @@ void UOnaCharacterAnimInstance::TurnInPlace(FRotator TargetRotation, float PlayR
 
 	FOnaTurnInPlaceAsset TargetTurnAsset;
 	// 获取转向资源动画
-	if (Stance.IsStanding())
+	if (CharacterInformation.Stance.IsStanding())
 	{
 		if (FMath::Abs(TurnAngle) < TurnInPlaceValues.Turn180Threshold)
 		{
@@ -418,7 +412,7 @@ bool UOnaCharacterAnimInstance::ShouldMoveCheck() const
  */
 bool UOnaCharacterAnimInstance::CanRotateInPlace() const
 {
-	return RotationMode.IsAiming() ||
+	return CharacterInformation.RotationMode.IsAiming() ||
 		CharacterInformation.ViewMode == EOnaViewMode::FirstPerson;
 }
 
@@ -427,7 +421,7 @@ bool UOnaCharacterAnimInstance::CanRotateInPlace() const
  */
 bool UOnaCharacterAnimInstance::CanTurnInPlace() const
 {
-	return RotationMode.IsLookingDirection() &&
+	return CharacterInformation.RotationMode.IsLookingDirection() &&
 		CharacterInformation.ViewMode == EOnaViewMode::ThirdPerson &&
 		GetCurveValue(NAME_Enable_Transition) >= 0.99;
 }
@@ -596,7 +590,7 @@ float UOnaCharacterAnimInstance::CalculateStrideBlend() const
 float UOnaCharacterAnimInstance::CalculateWalkRunBlend() const
 {
 	// Calculate the Walk Run Blend. This value is used within the Blendspaces to blend between walking and running.
-	return Gait.IsWalking() ? 0.0f : 1.0;
+	return CharacterInformation.Gait.IsWalking() ? 0.0f : 1.0;
 }
 
 

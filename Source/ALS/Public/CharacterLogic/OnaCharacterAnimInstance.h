@@ -98,8 +98,6 @@ private:
 
 	void UpdateInAirValues(float DeltaSeconds);
 
-	void UpdateRagdollValues();
-
 	/** Foot IK */
 
 	void SetFootLocking(float DeltaSeconds, FName EnableFootIKCurve, FName FootLockCurve, FName IKFootBone,
@@ -159,24 +157,6 @@ public:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Character Information", Meta = (
 		ShowOnlyInnerProperties))
 	FOnaAnimCharacterInfo CharacterInformation;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Character Information")
-	FOnaMovementState MovementState;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Character Information")
-	FOnaMovementAction MovementAction;
-	
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Character Information")
-	FOnaRotationMode RotationMode = EOnaRotationMode::VelocityDirection;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Character Information")
-	FOnaGait Gait = EOnaGait::Walking;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Character Information")
-	FOnaStance Stance = EOnaStance::Standing;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Character Information")
-	FOnaOverlayState OverlayState = EOnaOverlayState::Default;
 	
 	/** Anim Graph - Grounded */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Grounded", Meta = (
@@ -207,14 +187,7 @@ public:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Aiming Values", Meta = (
 		ShowOnlyInnerProperties))
 	FOnaAnimGraphAimingValues AimingValues; // 计算原地转向会用到的一系列中间变量, Update in Tick(UpdateAimingValues Func)
-
-
 	
-	/** Anim Graph - Layer Blending */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Layer Blending", Meta = (
-		ShowOnlyInnerProperties))
-	FOnaAnimGraphLayerBlending LayerBlendingValues;
-
 	/** Turn In Place */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|Configuration|Turn In Place", Meta = (
 		ShowOnlyInnerProperties))

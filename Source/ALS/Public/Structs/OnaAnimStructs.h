@@ -31,54 +31,6 @@ struct FOnaDynamicMontageParams
 };
 
 USTRUCT(BlueprintType)
-struct FOnaAnimCharacterInfo
-{
-	GENERATED_BODY()
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
-	FRotator AimingRotation = FRotator::ZeroRotator; // 到ReplicatedControlRotation(GetControlRotation)的插值，Update in SetEssentialValues
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
-	FRotator CharacterActorRotation = FRotator::ZeroRotator; // GetActorRotation, Update in SetEssentialValues
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
-	FVector Velocity = FVector::ZeroVector;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
-	FVector RelativeVelocityDirection = FVector::ZeroVector;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
-	FVector Acceleration = FVector::ZeroVector;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
-	FVector MovementInput = FVector::ZeroVector; // 移动加速度方向向量, ReplicatedCurrentAcceleration，Update in SetEssentialValues，
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
-	bool bIsMoving = false;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
-	bool bHasMovementInput = false;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
-	float Speed = 0.0f;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
-	float MovementInputAmount = 0.0f;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
-	float AimYawRate = 0.0f; // 摄像机从左到右旋转的速度, Update in Tick
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
-	float ZoomAmount = 0.0f;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
-	EOnaMovementState PrevMovementState = EOnaMovementState::None;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
-	EOnaViewMode ViewMode = EOnaViewMode::ThirdPerson;
-};
-
-USTRUCT(BlueprintType)
 struct FOnaAnimGraphLayerBlending
 {
 	GENERATED_BODY()
@@ -154,6 +106,76 @@ struct FOnaAnimGraphLayerBlending
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Layer Blending")
 	float EnableHandIK_R = 1.0f;
+};
+
+USTRUCT(BlueprintType)
+struct FOnaAnimCharacterInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
+	FRotator AimingRotation = FRotator::ZeroRotator; // 到ReplicatedControlRotation(GetControlRotation)的插值，Update in SetEssentialValues
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
+	FRotator CharacterActorRotation = FRotator::ZeroRotator; // GetActorRotation, Update in SetEssentialValues
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
+	FVector Velocity = FVector::ZeroVector;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
+	FVector RelativeVelocityDirection = FVector::ZeroVector;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
+	FVector Acceleration = FVector::ZeroVector;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
+	FVector MovementInput = FVector::ZeroVector; // 移动加速度方向向量, ReplicatedCurrentAcceleration，Update in SetEssentialValues，
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
+	bool bIsMoving = false;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
+	bool bHasMovementInput = false;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
+	float Speed = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
+	float MovementInputAmount = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
+	float AimYawRate = 0.0f; // 摄像机从左到右旋转的速度, Update in Tick
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
+	float ZoomAmount = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
+	EOnaMovementState PrevMovementState = EOnaMovementState::None;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
+	EOnaViewMode ViewMode = EOnaViewMode::ThirdPerson;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
+	FOnaMovementAction MovementAction;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
+	FOnaMovementState MovementState;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
+	FOnaRotationMode RotationMode = EOnaRotationMode::VelocityDirection;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
+	FOnaGait Gait = EOnaGait::Walking;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
+	FOnaStance Stance = EOnaStance::Standing;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Character Information")
+	FOnaOverlayState OverlayState = EOnaOverlayState::Default;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Layer Blending", Meta = (
+	ShowOnlyInnerProperties))
+	FOnaAnimGraphLayerBlending LayerBlendingValues;
 };
 
 USTRUCT(BlueprintType)
