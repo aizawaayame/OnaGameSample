@@ -162,9 +162,9 @@ public:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Grounded", Meta = (
 		ShowOnlyInnerProperties))
 	FOnaAnimGraphGrounded Grounded;
-
+	
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Grounded")
-	FOnaVelocityBlend VelocityBlend;
+	FOnaVelocityBlend VelocityBlend; // 用于计算当前速度方向，不同方向范围均在0-1
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Grounded")
 	FOnaLeanAmount LeanAmount;
