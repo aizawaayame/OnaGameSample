@@ -23,7 +23,7 @@ void AOnaPlayerController::OnPossess(APawn* InPawn)
 	
 	if (!IsValid(PossessedCharacter))
 		return;
-
+	
 	UOnaCharacterDebugComponent* DebugComponent = Cast<UOnaCharacterDebugComponent>(PossessedCharacter->GetComponentByClass(UOnaCharacterDebugComponent::StaticClass()));
 	if (DebugComponent)
 	{
