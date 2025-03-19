@@ -12,9 +12,10 @@ public class ALS : ModuleRules
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
+		OptimizeCode = CodeOptimization.Never;
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
-		
+
 		// Uncomment if you are using online features
 		// PrivateDependencyModuleNames.Add("OnlineSubsystem");
 
