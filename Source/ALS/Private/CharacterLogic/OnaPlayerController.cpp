@@ -164,7 +164,7 @@ void AOnaPlayerController::JumpAction(const FInputActionValue& Value)
 {
 	if (PossessedCharacter)
 	{
-		// PossessedCharacter->JumpAction(Value.Get<bool>());
+		PossessedCharacter->JumpAction(Value.Get<bool>());
 	}
 }
 

@@ -776,6 +776,36 @@ void AOnaCharacterBase::StanceAction_Implementation()
 	}
 }
 
+void AOnaCharacterBase::JumpAction_Implementation(bool bValue)
+{
+	if (bValue)
+	{
+		if (JumpPressedDelegate.IsBound())
+		{
+			JumpPressedDelegate.Broadcast();
+		}
+
+		if (MovementAction == EOnaMovementAction::None)
+		{
+			if (MovementState == EOnaMovementState::Grounded)
+			{
+				if (Stance == EOnaStance::Standing)
+				{
+					Jump();
+				}
+				else if (Stance == EOnaStance::Crouching)
+				{
+					UnCrouch();
+				}
+			}
+		}
+	}
+	else
+	{
+		StopJumping();
+	}
+}
+
 void AOnaCharacterBase::OnRep_RotationMode(EOnaRotationMode PrevRotMode)
 {
 	OnRotationModeChanged(PrevRotMode);

@@ -17,6 +17,9 @@ class UOnaCharacterDebugComponent;
 class UOnaCharacterMovementComponent;
 class UOnaPlayerCameraBehavior;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FJumpPressedSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnJumpedSignature);
+
 UCLASS(Blueprintable, BlueprintType)
 class ALS_API AOnaCharacterBase : public ACharacter
 {
@@ -204,6 +207,9 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "ALS|Input")
 	void SprintAction(bool bValue);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "ALS|Input")
+	void JumpAction(bool bValue);
 #pragma endregion
 
 #pragma region Replication
@@ -287,7 +293,14 @@ protected:
 protected:
 	
 #pragma region Props
+#pragma region Delegates
+	UPROPERTY(BlueprintAssignable, Category = "ALS|Input")
+	FJumpPressedSignature JumpPressedDelegate;
 
+	UPROPERTY(BlueprintAssignable, Category = "ALS|Input")
+	FOnJumpedSignature OnJumpedDelegate;
+	
+#pragma endregion 
 #pragma region Component
 	UPROPERTY()
 	TObjectPtr<UOnaCharacterMovementComponent> OnaCharacterMovement;
