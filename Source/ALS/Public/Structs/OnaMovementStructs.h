@@ -479,16 +479,16 @@ private:
 	EOnaMovementDirection MovementDirection = EOnaMovementDirection::Forward;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Movement System")
-	bool Forward_ = true;
+	bool bForward = true;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Movement System")
-	bool Right_ = false;
+	bool bRight = false;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Movement System")
-	bool Left_ = false;
+	bool bLeft = false;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "Movement System")
-	bool Backward_ = false;
+	bool bBackward = false;
 
 public:
 	FOnaMovementDirection()
@@ -500,20 +500,30 @@ public:
 		*this = InitialMovementDirection;
 	}
 
-	const bool& Forward() const { return Forward_; }
-	const bool& Right() const { return Right_; }
-	const bool& Left() const { return Left_; }
-	const bool& Backward() const { return Backward_; }
+	const bool& IsForward() const { return bForward; }
+	const bool& IsRight() const { return bRight; }
+	const bool& IsLeft() const { return bLeft; }
+	const bool& IsBackward() const { return bBackward; }
 
 	operator FOnaMovementDirection() const { return MovementDirection; }
 
 	void operator=(const EOnaMovementDirection NewMovementDirection)
 	{
 		MovementDirection = NewMovementDirection;
-		Forward_ = MovementDirection == EOnaMovementDirection::Forward;
-		Right_ = MovementDirection == EOnaMovementDirection::Right;
-		Left_ = MovementDirection == EOnaMovementDirection::Left;
-		Backward_ = MovementDirection == EOnaMovementDirection::Backward;
+		bForward = MovementDirection == EOnaMovementDirection::Forward;
+		bRight = MovementDirection == EOnaMovementDirection::Right;
+		bLeft = MovementDirection == EOnaMovementDirection::Left;
+		bBackward = MovementDirection == EOnaMovementDirection::Backward;
+	}
+
+	bool operator==(const EOnaMovementDirection& RHS) const
+	{
+		return MovementDirection == RHS;
+	}
+
+	bool operator!=(const EOnaMovementDirection& RHS) const
+	{
+		return MovementDirection != RHS;
 	}
 };
 

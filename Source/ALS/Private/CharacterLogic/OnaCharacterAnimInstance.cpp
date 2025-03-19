@@ -6,6 +6,7 @@
 #include "Curves/CurveFloat.h"
 #include "Curves/CurveVector.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Math/OnaMathLibrary.h"
 
 /**
  * \brief 代表当前的站姿
@@ -100,7 +101,9 @@ void UOnaCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		if (Grounded.bShouldMove)
 		{
 			UpdateMovementValues(DeltaSeconds);
+			
 			UpdateRotationValues();
+			UpdateMoveDirection();
 		}
 		else
 		{
@@ -361,7 +364,7 @@ void UOnaCharacterAnimInstance::TurnInPlace(FRotator TargetRotation, float PlayR
 	PlaySlotAnimationAsDynamicMontage(TargetTurnAsset.Animation, TargetTurnAsset.SlotName, 0.2f, 0.2f,
 		TargetTurnAsset.PlayRate * PlayRateScale, 1, 0.0f, StartTime);
 
-	// 这段代码效果存疑
+	// TODO:这段代码效果存疑
 	if (TargetTurnAsset.ScaleTurnAngle)
 	{
 		Grounded.RotationScale = (TurnAngle / TargetTurnAsset.AnimatedAngle) * TargetTurnAsset.PlayRate * PlayRateScale;
@@ -384,7 +387,15 @@ float UOnaCharacterAnimInstance::CalculateLandPrediction() const
 
 EOnaMovementDirection UOnaCharacterAnimInstance::CalculateMovementDirection() const
 {
-	return EOnaMovementDirection::Forward;
+	if (CharacterInformation.Gait.IsSprinting() || CharacterInformation.RotationMode.IsVelocityDirection())
+	{
+		return EOnaMovementDirection::Forward;
+	}
+
+	FRotator Delta = CharacterInformation.Velocity.ToOrientationRotator() - CharacterInformation.AimingRotation;
+	Delta.Normalize();
+	EOnaMovementDirection Result = UOnaMathLibrary::CalculateQuadrant(Grounded.MovementDirection, 70.0f, -70.0f, 110.0f, -110.0f, 5.0f, Delta.Yaw);
+	return Result;
 }
 
 /**
@@ -463,14 +474,13 @@ void UOnaCharacterAnimInstance::UpdateMovementValues(float DeltaSeconds)
 	Grounded.CrouchingPlayRate = CalculateCrouchingPlayRate();
 }
 
+/**
+ * \brief Update Grounded.FYaw, Grounded.BYaw, Grounded.LYaw, Grounded.RYaw
+ */
 void UOnaCharacterAnimInstance::UpdateRotationValues()
 {
-	// Set the Movement Direction
-	MovementDirection = CalculateMovementDirection();
-
-	// Set the Yaw Offsets. These values influence the "YawOffset" curve in the AnimGraph and are used to offset
-	// the characters rotation for more natural movement. The curves allow for fine control over how the offset
-	// behaves for each movement direction.
+	// 设置不同方向的Yaw。这些Yaw影响AnimGraph中的"YawOffset"曲线，用于偏移角色旋转以实现更自然的移动效果。
+	// 这些曲线允许对每个移动方向的偏移行为进行精细控制。
 	FRotator Delta = CharacterInformation.Velocity.ToOrientationRotator() - CharacterInformation.AimingRotation;
 	Delta.Normalize();
 	const FVector& FBOffset = YawOffset_FB->GetVectorValue(Delta.Yaw);
@@ -479,6 +489,14 @@ void UOnaCharacterAnimInstance::UpdateRotationValues()
 	const FVector& LROffset = YawOffset_LR->GetVectorValue(Delta.Yaw);
 	Grounded.LYaw = LROffset.X;
 	Grounded.RYaw = LROffset.Y;
+}
+
+/**
+ * \brief Update Grounded.MovementDirection
+ */
+void UOnaCharacterAnimInstance::UpdateMoveDirection()
+{
+	Grounded.MovementDirection = CalculateMovementDirection();
 }
 
 void UOnaCharacterAnimInstance::TurnInPlaceCheck(float DeltaSeconds)

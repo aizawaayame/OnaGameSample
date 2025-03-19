@@ -11,5 +11,6 @@ enum class EOnaMovementDirection : uint8
     Forward,
     Right,
     Left,
-    Backward
+    Backward,
+    MAX
 };

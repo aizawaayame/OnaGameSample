@@ -96,6 +96,8 @@ private:
 
 	void UpdateRotationValues();
 
+	void UpdateMoveDirection();
+	
 	void UpdateInAirValues(float DeltaSeconds);
 
 	/** Foot IK */
@@ -174,9 +176,6 @@ public:
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Grounded")
 	FOnaGroundedEntryState GroundedEntryState = EOnaGroundedEntryState::None;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Grounded")
-	FOnaMovementDirection MovementDirection = EOnaMovementDirection::Forward;
 
 	/** Anim Graph - In Air */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - In Air", Meta = (

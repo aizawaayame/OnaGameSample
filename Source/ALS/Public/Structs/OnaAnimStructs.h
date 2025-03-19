@@ -230,6 +230,9 @@ struct FOnaAnimGraphGrounded
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Grounded")
 	float RYaw = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Anim Graph - Grounded")
+	FOnaMovementDirection MovementDirection = EOnaMovementDirection::Forward;
 };
 
 USTRUCT(BlueprintType)
