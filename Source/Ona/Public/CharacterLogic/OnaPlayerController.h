@@ -9,7 +9,7 @@ class AOnaCharacterBase;
 class UInputMappingContext;
 
 UCLASS(Blueprintable, BlueprintType)
-class ALS_API AOnaPlayerController : public APlayerController
+class ONA_API AOnaPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 public:

@@ -22,7 +22,7 @@ class AOnaCharacterBase;
  * 
  */
 UCLASS(Blueprintable, BlueprintType)
-class ALS_API UOnaCharacterAnimInstance : public UAnimInstance
+class ONA_API UOnaCharacterAnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
 public:

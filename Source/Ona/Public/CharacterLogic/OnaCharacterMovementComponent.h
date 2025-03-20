@@ -11,11 +11,11 @@
  * Authoritative networked Character Movement
  */
 UCLASS()
-class ALS_API UOnaCharacterMovementComponent : public UCharacterMovementComponent
+class ONA_API UOnaCharacterMovementComponent : public UCharacterMovementComponent
 {
 	GENERATED_BODY()
 public:
-	class ALS_API FOnaSavedMove_Character : public FSavedMove_Character
+	class ONA_API FOnaSavedMove_Character : public FSavedMove_Character
 	{
 		using Super = FSavedMove_Character;
 	public:
@@ -30,7 +30,7 @@ public:
 		EOnaGait SavedAllowedGait = EOnaGait::Walking;
 	};
 
-	class ALS_API FOnaNetworkPredictionData_Client_Character : public FNetworkPredictionData_Client_Character
+	class ONA_API FOnaNetworkPredictionData_Client_Character : public FNetworkPredictionData_Client_Character
 	{
 		using Super = FNetworkPredictionData_Client_Character;
 	public:

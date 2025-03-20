@@ -18,7 +18,7 @@ class UCameraInterface : public UInterface
 /**
  * 
  */
-class ALS_API ICameraInterface
+class ONA_API ICameraInterface
 {
 	GENERATED_BODY()
 

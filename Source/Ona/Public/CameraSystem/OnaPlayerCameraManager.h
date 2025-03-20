@@ -12,7 +12,7 @@ class AOnaCharacterBase;
  * 
  */
 UCLASS(Blueprintable, BlueprintType)
-class ALS_API AOnaPlayerCameraManager : public APlayerCameraManager
+class ONA_API AOnaPlayerCameraManager : public APlayerCameraManager
 {
 	GENERATED_BODY()
 public:

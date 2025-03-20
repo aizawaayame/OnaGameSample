@@ -16,7 +16,7 @@
  * 
  */
 UCLASS()
-class ALS_API UOnaPlayerCameraBehavior : public UAnimInstance
+class ONA_API UOnaPlayerCameraBehavior : public UAnimInstance
 {
 	GENERATED_BODY()
 public:

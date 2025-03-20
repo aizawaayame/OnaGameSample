@@ -16,7 +16,7 @@ class UControllerInterface : public UInterface
 /**
  * 
  */
-class ALS_API IControllerInterface
+class ONA_API IControllerInterface
 {
 	GENERATED_BODY()
 

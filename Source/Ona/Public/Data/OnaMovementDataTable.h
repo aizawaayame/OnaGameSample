@@ -10,7 +10,7 @@
  * 
  */
 UCLASS(Blueprintable)
-class ALS_API UOnaMovementDataTable : public UDataTable
+class ONA_API UOnaMovementDataTable : public UDataTable
 {
 	GENERATED_BODY()
 	

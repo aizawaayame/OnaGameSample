@@ -8,7 +8,7 @@
 
 
 UCLASS()
-class ALS_API AOnaCharacter : public AOnaCharacterBase
+class ONA_API AOnaCharacter : public AOnaCharacterBase
 {
 	GENERATED_BODY()
 

@@ -1,0 +1,16 @@
+{
+  "Category": "",
+  "Description": "",
+  "EngineAssociation": "5.4",
+  "FileVersion": 3,
+  "Modules": [
+    {
+      "AdditionalDependencies": [
+        "Engine"
+      ],
+      "LoadingPhase": "Default",
+      "Name": "Ona",
+      "Type": "Runtime"
+    }
+  ]
+}

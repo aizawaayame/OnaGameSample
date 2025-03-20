@@ -8,7 +8,7 @@ class AOnaCharacterBase;
 class USkeletalMesh;
 
 UCLASS(Blueprintable, BlueprintType)
-class ALS_API UOnaCharacterDebugComponent : public UActorComponent
+class ONA_API UOnaCharacterDebugComponent : public UActorComponent
 {
 	GENERATED_BODY()
 public:

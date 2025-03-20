@@ -12,7 +12,7 @@ struct FOnaMovementDirection;
  * 
  */
 UCLASS()
-class ALS_API UOnaMathLibrary : public UBlueprintFunctionLibrary
+class ONA_API UOnaMathLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 public:

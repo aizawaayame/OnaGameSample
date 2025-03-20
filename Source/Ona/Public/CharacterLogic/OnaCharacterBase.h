@@ -21,7 +21,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FJumpPressedSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnJumpedSignature);
 
 UCLASS(Blueprintable, BlueprintType)
-class ALS_API AOnaCharacterBase : public ACharacter
+class ONA_API AOnaCharacterBase : public ACharacter
 {
 	GENERATED_BODY()
 public:

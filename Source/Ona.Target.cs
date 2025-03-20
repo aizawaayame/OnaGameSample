@@ -3,13 +3,13 @@
 using UnrealBuildTool;
 using System.Collections.Generic;
 
-public class ALSTarget : TargetRules
+public class OnaTarget : TargetRules
 {
-	public ALSTarget(TargetInfo Target) : base(Target)
+	public OnaTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
 		DefaultBuildSettings = BuildSettingsVersion.V5;
 
-		ExtraModuleNames.AddRange( new string[] { "ALS" } );
+		ExtraModuleNames.AddRange( new string[] { "Ona" } );
 	}
 }
