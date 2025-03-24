@@ -143,7 +143,7 @@ private:
 
 	float CalculateLandPrediction() const;
 
-	// FALSLeanAmount CalculateAirLeanAmount() const;
+	FOnaLeanAmount CalculateAirLeanAmount() const;
 
 	EOnaMovementDirection CalculateMovementDirection() const;
 

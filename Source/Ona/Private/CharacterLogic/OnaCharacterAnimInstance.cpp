@@ -2,6 +2,8 @@
 #include "CharacterLogic/OnaCharacterAnimInstance.h"
 
 #include "CharacterLogic/OnaCharacterBase.h"
+#include "CharacterLogic/OnaCharacterDebugComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Curves/CurveFloat.h"
 #include "Curves/CurveVector.h"
@@ -136,7 +138,7 @@ void UOnaCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	}
 	else if (CharacterInformation.MovementState.IsInAir())
 	{
-		// TODO
+		UpdateInAirValues(DeltaSeconds);
 	}
 }
 
@@ -273,6 +275,13 @@ void UOnaCharacterAnimInstance::UpdateFootIK(float DeltaSeconds)
 
 void UOnaCharacterAnimInstance::UpdateInAirValues(float DeltaSeconds)
 {
+	InAir.FallSpeed = CharacterInformation.Velocity.Z;
+
+	InAir.LandPrediction = CalculateLandPrediction();
+
+	const FOnaLeanAmount& InAirLeanAmount = CalculateAirLeanAmount();
+	LeanAmount.LR = FMath::FInterpTo(LeanAmount.LR, InAirLeanAmount.LR, DeltaSeconds, Config.GroundedLeanInterpSpeed);
+	LeanAmount.FB = FMath::FInterpTo(LeanAmount.FB, InAirLeanAmount.FB, DeltaSeconds, Config.GroundedLeanInterpSpeed);
 }
 
 void UOnaCharacterAnimInstance::SetFootLocking(float DeltaSeconds, FName EnableFootIKCurve, FName FootLockCurve, FName IKFootBone, float& CurFootLockAlpha, bool& UseFootLockCurve,
@@ -380,9 +389,61 @@ FVector UOnaCharacterAnimInstance::CalculateRelativeAccelerationAmount() const
 	return FVector::Zero();
 }
 
+
 float UOnaCharacterAnimInstance::CalculateLandPrediction() const
 {
-	return 0;
+	if (InAir.FallSpeed >= -200.f)
+		return 0.f;
+
+	const UCapsuleComponent* CapsuleComponent = Character->GetCapsuleComponent();
+	const FVector& CapsuleWorldLoc = CapsuleComponent->GetComponentLocation();
+	const float VelocityZ = CharacterInformation.Velocity.Z;
+	FVector VelocityClamped = CharacterInformation.Velocity;
+	VelocityClamped.Z = FMath::Clamp(VelocityZ, -4000.f, -200.f);
+	VelocityClamped.Normalize();
+
+	const FVector TraceLength = VelocityClamped * FMath::GetMappedRangeValueClamped<float, float>({0.f, -4000.f}, {50.f, 2000.f}, VelocityZ);
+	UWorld* World = GetWorld();
+	check(World);
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(Character);
+	FHitResult HitResult;
+	const FCollisionShape CapsuleCollisionShape = FCollisionShape::MakeCapsule(CapsuleComponent->GetUnscaledCapsuleRadius(),
+																			   CapsuleComponent->GetUnscaledCapsuleHalfHeight());
+	const bool bHit = World->SweepSingleByChannel(HitResult, CapsuleWorldLoc, CapsuleWorldLoc + TraceLength, FQuat::Identity,
+												  ECC_Visibility, CapsuleCollisionShape, Params);
+	if (OnaDebugComponent)
+	{
+		UOnaCharacterDebugComponent::DrawDebugCapsuleTraceSingle(World,
+														CapsuleWorldLoc,
+														CapsuleWorldLoc + TraceLength,
+														CapsuleCollisionShape,
+														EDrawDebugTrace::Type::ForOneFrame,
+														bHit,
+														HitResult,
+														FLinearColor::Red,
+														FLinearColor::Green,
+														5.0f);
+	}
+
+	if (Character->GetCharacterMovement()->IsWalkable(HitResult))
+	{
+		return FMath::Lerp(LandPredictionCurve->GetFloatValue(HitResult.Time), 0.f, GetCurveValue(NAME_Mask_LandPrediction));	
+	}
+	
+	return 0.f;
+}
+
+FOnaLeanAmount UOnaCharacterAnimInstance::CalculateAirLeanAmount() const
+{
+	FOnaLeanAmount CalcLeanAmount;
+	const FVector& UnrotatedVel = CharacterInformation.CharacterActorRotation.UnrotateVector(CharacterInformation.Velocity) / 350.f;
+	FVector2D InversedVect(UnrotatedVel.Y, UnrotatedVel.X);
+	InversedVect *= LeanInAirCurve->GetFloatValue(InAir.FallSpeed);
+	CalcLeanAmount.LR = InversedVect.X;
+	CalcLeanAmount.FB = InversedVect.Y;
+	return CalcLeanAmount;
 }
 
 EOnaMovementDirection UOnaCharacterAnimInstance::CalculateMovementDirection() const
