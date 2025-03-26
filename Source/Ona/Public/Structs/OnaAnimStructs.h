@@ -436,3 +436,59 @@ struct FOnaAnimGraphAimingValues
 	float RightYawTime = 0.0f;
 };
 
+USTRUCT(BlueprintType)
+struct FOnaAnimGraphFootIK
+{
+	GENERATED_BODY()
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Anim Graph - Foot IK")
+	float FootLock_L_Alpha = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Anim Graph - Foot IK")
+	float FootLock_R_Alpha = 0.0f;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Anim Graph - Foot IK")
+	bool UseFootLockCurve_L = false;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Anim Graph - Foot IK")
+	bool UseFootLockCurve_R = false;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Anim Graph - Foot IK")
+	FVector FootLock_L_Location = FVector::ZeroVector;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Anim Graph - Foot IK")
+	FVector TargetFootLock_R_Location = FVector::ZeroVector;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Anim Graph - Foot IK")
+	FVector FootLock_R_Location = FVector::ZeroVector;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Anim Graph - Foot IK")
+	FRotator TargetFootLock_L_Rotation = FRotator::ZeroRotator;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Anim Graph - Foot IK")
+	FRotator FootLock_L_Rotation = FRotator::ZeroRotator;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Anim Graph - Foot IK")
+	FRotator TargetFootLock_R_Rotation = FRotator::ZeroRotator;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Anim Graph - Foot IK")
+	FRotator FootLock_R_Rotation = FRotator::ZeroRotator;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Anim Graph - Foot IK")
+	FVector FootOffset_L_Location = FVector::ZeroVector;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Anim Graph - Foot IK")
+	FVector FootOffset_R_Location = FVector::ZeroVector;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Anim Graph - Foot IK")
+	FRotator FootOffset_L_Rotation = FRotator::ZeroRotator;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Anim Graph - Foot IK")
+	FRotator FootOffset_R_Rotation = FRotator::ZeroRotator;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Anim Graph - Foot IK")
+	FVector PelvisOffset = FVector::ZeroVector;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Anim Graph - Foot IK")
+	float PelvisAlpha = 0.0f;
+};

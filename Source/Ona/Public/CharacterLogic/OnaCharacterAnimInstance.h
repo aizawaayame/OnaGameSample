@@ -186,6 +186,11 @@ public:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Aiming Values", Meta = (
 		ShowOnlyInnerProperties))
 	FOnaAnimGraphAimingValues AimingValues; // 计算原地转向会用到的一系列中间变量, Update in Tick(UpdateAimingValues Func)
+
+	/** Anim Graph - Foot IK */
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "ALS|Read Only Data|Anim Graph - Foot IK", Meta = (
+		ShowOnlyInnerProperties))
+	FOnaAnimGraphFootIK FootIKValues;
 	
 	/** Turn In Place */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|Configuration|Turn In Place", Meta = (
