@@ -88,6 +88,7 @@ void UOnaCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	CharacterInformation.OverlayState = Character->GetOverlayState();
 
 	UpdateAimingValues(DeltaSeconds);
+	UpdateFootIK(DeltaSeconds);
 	
 	if (CharacterInformation.MovementState.IsGrounded())
 	{
@@ -271,6 +272,33 @@ void UOnaCharacterAnimInstance::UpdateLayerValues()
 
 void UOnaCharacterAnimInstance::UpdateFootIK(float DeltaSeconds)
 {
+	FVector FootOffsetLTarget = FVector::ZeroVector;
+	FVector FootOffsetRTarget = FVector::ZeroVector;
+
+	SetFootLocking(DeltaSeconds, NAME_Enable_FootIK_L, NAME_FootLock_L,
+			   IkFootL_BoneName, FootIKValues.FootLock_L_Alpha, FootIKValues.UseFootLockCurve_L,
+			   FootIKValues.FootLock_L_Location, FootIKValues.FootLock_L_Rotation);
+	SetFootLocking(DeltaSeconds, NAME_Enable_FootIK_R, NAME_FootLock_R,
+				   IkFootR_BoneName, FootIKValues.FootLock_R_Alpha, FootIKValues.UseFootLockCurve_R,
+				   FootIKValues.FootLock_R_Location, FootIKValues.FootLock_R_Rotation);
+
+	if (CharacterInformation.MovementState.IsInAir())
+	{
+		// Reset IK Offsets if In Air
+		SetPelvisIKOffset(DeltaSeconds, FVector::ZeroVector, FVector::ZeroVector);
+		ResetIKOffsets(DeltaSeconds);
+	}
+	else 
+	{
+		// Update all Foot Lock and Foot Offset values when not In Air
+		SetFootOffsets(DeltaSeconds, NAME_Enable_FootIK_L, IkFootL_BoneName, NAME__ALSCharacterAnimInstance__root,
+					   FootOffsetLTarget,
+					   FootIKValues.FootOffset_L_Location, FootIKValues.FootOffset_L_Rotation);
+		SetFootOffsets(DeltaSeconds, NAME_Enable_FootIK_R, IkFootR_BoneName, NAME__ALSCharacterAnimInstance__root,
+					   FootOffsetRTarget,
+					   FootIKValues.FootOffset_R_Location, FootIKValues.FootOffset_R_Rotation);
+		SetPelvisIKOffset(DeltaSeconds, FootOffsetLTarget, FootOffsetRTarget);
+	}
 }
 
 void UOnaCharacterAnimInstance::UpdateInAirValues(float DeltaSeconds)
@@ -284,17 +312,75 @@ void UOnaCharacterAnimInstance::UpdateInAirValues(float DeltaSeconds)
 	LeanAmount.FB = FMath::FInterpTo(LeanAmount.FB, InAirLeanAmount.FB, DeltaSeconds, Config.GroundedLeanInterpSpeed);
 }
 
+/**
+ * \brief 理角色脚步位置锁定，允许脚步在角色移动时保持与地面接触，从而创建更真实的动画效果
+ * \param FootLockCurve
+ * \param IKFootBone 需要锁定的脚部IK骨骼
+ * \param CurFootLockAlpha 当前脚部锁定插值权重（引用参数）
+ */
 void UOnaCharacterAnimInstance::SetFootLocking(float DeltaSeconds, FName EnableFootIKCurve, FName FootLockCurve, FName IKFootBone, float& CurFootLockAlpha, bool& UseFootLockCurve,
 	FVector& CurFootLockLoc, FRotator& CurFootLockRot)
 {
+	if (GetCurveValue(EnableFootIKCurve) <= 0)
+		return;
+
+	// Step 1: Set Local FootLock Curve Value
+	float FootLockCurveValue;
+	if (UseFootLockCurve)
+	{
+		UseFootLockCurve = FMath::Abs(GetCurveValue(NAME__ALSCharacterAnimInstance__RotationAmount)) <= 0.001f
+			|| Character->GetLocalRole() != ROLE_AutonomousProxy;
+		FootLockCurveValue = GetCurveValue(FootLockCurve) * (1.f / GetSkelMeshComponent()->AnimUpdateRateParams->UpdateRate);
+	}
+	else
+	{
+		UseFootLockCurve = GetCurveValue(FootLockCurve) >= 0.99f;
+		FootLockCurveValue = 0;
+	}
+
+	// Step 2: 确保脚部动画的自然过渡，通过只允许从锁定位置平滑退出(alpha值减小)或立即锁定到新位置(alpha=1)，而不允许缓慢地渐变进入锁定状态，这样可以防止脚部出现滑动或不自然的逐渐锁定效果。
+	if (FootLockCurveValue >= 0.99f || FootLockCurveValue < CurFootLockAlpha)
+	{
+		CurFootLockAlpha = FootLockCurveValue;
+	}
+
+	// Step 3:捕获锁定姿态
+	if (CurFootLockAlpha >= 0.99f)
+	{
+		const FTransform& OwnerTransform =
+			GetOwningComponent()->GetSocketTransform(IKFootBone, RTS_Component);
+		CurFootLockLoc = OwnerTransform.GetLocation();
+		CurFootLockRot = OwnerTransform.Rotator();
+	}
+
+	// Step 4: 应用锁定偏移
+	// 只要锁定Alpha值大于0，就调用SetFootLockOffsets函数来计算和应用必要的偏移，使脚部保持在锁定位置，即使角色胶囊体在移动。
+	if (CurFootLockAlpha > 0)
+	{
+		SetFootLockOffsets(DeltaSeconds, CurFootLockLoc, CurFootLockRot);
+	}
 }
 
 void UOnaCharacterAnimInstance::SetFootLockOffsets(float DeltaSeconds, FVector& LocalLoc, FRotator& LocalRot)
 {
+	
 }
 
 void UOnaCharacterAnimInstance::SetPelvisIKOffset(float DeltaSeconds, FVector FootOffsetLTarget, FVector FootOffsetRTarget)
 {
+	FootIKValues.PelvisAlpha = (GetCurveValue(NAME_Enable_FootIK_L) + GetCurveValue(NAME_Enable_FootIK_R)) / 2.0f;
+
+	if (FootIKValues.PelvisAlpha > 0.f)
+	{
+		const FVector PelvisTarget = FootOffsetLTarget.Z < FootOffsetRTarget.Z ? FootOffsetLTarget : FootOffsetRTarget;
+		const float InterpSpeed = PelvisTarget.Z > FootIKValues.PelvisOffset.Z ? 10.0f : 15.0f;
+		FootIKValues.PelvisOffset =
+			FMath::VInterpTo(FootIKValues.PelvisOffset, PelvisTarget, DeltaSeconds, InterpSpeed);
+	}
+	else
+	{
+		FootIKValues.PelvisOffset = FVector::ZeroVector;
+	}
 }
 
 void UOnaCharacterAnimInstance::ResetIKOffsets(float DeltaSeconds)
@@ -304,6 +390,67 @@ void UOnaCharacterAnimInstance::ResetIKOffsets(float DeltaSeconds)
 void UOnaCharacterAnimInstance::SetFootOffsets(float DeltaSeconds, FName EnableFootIKCurve, FName IKFootBone, FName RootBone, FVector& CurLocationTarget, FVector& CurLocationOffset,
 	FRotator& CurRotationOffset)
 {
+	if (GetCurveValue(EnableFootIKCurve) <= 0)
+	{
+		CurLocationOffset = FVector::ZeroVector;
+		CurRotationOffset = FRotator::ZeroRotator;
+		return;
+	}
+
+	USkeletalMeshComponent* OwnerComp = GetOwningComponent();
+	
+	// IK骨骼在Root Z平面的投影
+	FVector IKFootFloorLoc = OwnerComp->GetSocketLocation(IKFootBone);
+	IKFootFloorLoc.Z = OwnerComp->GetSocketLocation(RootBone).Z;
+
+	UWorld* World = GetWorld();
+	check(World);
+
+	FCollisionQueryParams CollisionQueryParams;
+	CollisionQueryParams.AddIgnoredActor(Character);
+
+	const FVector TraceStart = IKFootFloorLoc + FVector(0, 0, Config.IK_TraceDistanceAboveFoot);
+	const FVector TraceEnd = IKFootFloorLoc - FVector(0, 0, Config.IK_TraceDistanceBelowFoot);
+
+	FHitResult HitResult;
+	const bool bHit = World->LineTraceSingleByChannel(HitResult,
+		TraceStart,
+		TraceEnd,
+		ECC_Visibility,
+		CollisionQueryParams);
+	
+#if WITH_EDITOR
+	if (OnaDebugComponent && OnaDebugComponent->GetShowTraces())
+	{
+		UOnaCharacterDebugComponent::DrawDebugLineTraceSingle(
+			World,
+			TraceStart,
+			TraceEnd,
+			EDrawDebugTrace::Type::ForOneFrame,
+			bHit,
+			HitResult,
+			FLinearColor::Red,
+			FLinearColor::Green,
+			5.0f);
+	}
+#endif
+
+	FRotator TargetRotOffset = FRotator::ZeroRotator;
+	if (Character->GetCharacterMovement()->IsWalkable(HitResult))
+	{
+		FVector ImpactPoint = HitResult.ImpactPoint;
+		FVector ImpactNormal = HitResult.ImpactNormal;
+
+		CurLocationTarget = (ImpactPoint + ImpactNormal * Config.FootHeight)
+			- (IKFootFloorLoc + FVector(0, 0, Config.FootHeight));
+
+		TargetRotOffset.Pitch =  -FMath::RadiansToDegrees(FMath::Atan2(ImpactNormal.X, ImpactNormal.Z));
+		TargetRotOffset.Roll = FMath::RadiansToDegrees(FMath::Atan2(ImpactNormal.Y, ImpactNormal.Z));
+	}
+
+	const float InterpSpeed = CurLocationOffset.Z > CurLocationTarget.Z ? 30.0f : 15.0f;
+	CurLocationOffset = FMath::VInterpTo(CurLocationOffset, CurLocationTarget, DeltaSeconds, InterpSpeed);
+	CurRotationOffset = FMath::RInterpTo(CurRotationOffset, TargetRotOffset, DeltaSeconds, 30.f);
 }
 
 void UOnaCharacterAnimInstance::RotateInPlaceCheck()
