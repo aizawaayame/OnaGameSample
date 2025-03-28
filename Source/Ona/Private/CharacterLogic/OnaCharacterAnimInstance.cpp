@@ -316,52 +316,52 @@ void UOnaCharacterAnimInstance::UpdateInAirValues(float DeltaSeconds)
  * \brief 理角色脚步位置锁定，允许脚步在角色移动时保持与地面接触，从而创建更真实的动画效果
  * \param FootLockCurve
  * \param IKFootBone 需要锁定的脚部IK骨骼
- * \param CurFootLockAlpha 当前脚部锁定插值权重（引用参数）
+ * \param OutCurFootLockAlpha 当前脚部锁定插值权重（引用参数）
  */
-void UOnaCharacterAnimInstance::SetFootLocking(float DeltaSeconds, FName EnableFootIKCurve, FName FootLockCurve, FName IKFootBone, float& CurFootLockAlpha, bool& UseFootLockCurve,
-	FVector& CurFootLockLoc, FRotator& CurFootLockRot)
+void UOnaCharacterAnimInstance::SetFootLocking(float DeltaSeconds, FName EnableFootIKCurve, FName FootLockCurve, FName IKFootBone, float& OutCurFootLockAlpha, bool& OutUseFootLockCurve,
+	FVector& OutCurFootLockLoc, FRotator& OutCurFootLockRot)
 {
 	if (GetCurveValue(EnableFootIKCurve) <= 0)
 		return;
 
 	// Step 1: Set Local FootLock Curve Value
 	float FootLockCurveValue;
-	if (UseFootLockCurve)
+	if (OutUseFootLockCurve)
 	{
-		UseFootLockCurve = FMath::Abs(GetCurveValue(NAME__ALSCharacterAnimInstance__RotationAmount)) <= 0.001f
+		OutUseFootLockCurve = FMath::Abs(GetCurveValue(NAME__ALSCharacterAnimInstance__RotationAmount)) <= 0.001f
 			|| Character->GetLocalRole() != ROLE_AutonomousProxy;
 		FootLockCurveValue = GetCurveValue(FootLockCurve) * (1.f / GetSkelMeshComponent()->AnimUpdateRateParams->UpdateRate);
 	}
 	else
 	{
-		UseFootLockCurve = GetCurveValue(FootLockCurve) >= 0.99f;
+		OutUseFootLockCurve = GetCurveValue(FootLockCurve) >= 0.99f;
 		FootLockCurveValue = 0;
 	}
 
 	// Step 2: 确保脚部动画的自然过渡，通过只允许从锁定位置平滑退出(alpha值减小)或立即锁定到新位置(alpha=1)，而不允许缓慢地渐变进入锁定状态，这样可以防止脚部出现滑动或不自然的逐渐锁定效果。
-	if (FootLockCurveValue >= 0.99f || FootLockCurveValue < CurFootLockAlpha)
+	if (FootLockCurveValue >= 0.99f || FootLockCurveValue < OutCurFootLockAlpha)
 	{
-		CurFootLockAlpha = FootLockCurveValue;
+		OutCurFootLockAlpha = FootLockCurveValue;
 	}
 
 	// Step 3:捕获锁定姿态
-	if (CurFootLockAlpha >= 0.99f)
+	if (OutCurFootLockAlpha >= 0.99f)
 	{
 		const FTransform& OwnerTransform =
 			GetOwningComponent()->GetSocketTransform(IKFootBone, RTS_Component);
-		CurFootLockLoc = OwnerTransform.GetLocation();
-		CurFootLockRot = OwnerTransform.Rotator();
+		OutCurFootLockLoc = OwnerTransform.GetLocation();
+		OutCurFootLockRot = OwnerTransform.Rotator();
 	}
 
 	// Step 4: 应用锁定偏移
 	// 只要锁定Alpha值大于0，就调用SetFootLockOffsets函数来计算和应用必要的偏移，使脚部保持在锁定位置，即使角色胶囊体在移动。
-	if (CurFootLockAlpha > 0)
+	if (OutCurFootLockAlpha > 0)
 	{
-		SetFootLockOffsets(DeltaSeconds, CurFootLockLoc, CurFootLockRot);
+		SetFootLockOffsets(DeltaSeconds, OutCurFootLockLoc, OutCurFootLockRot);
 	}
 }
 
-void UOnaCharacterAnimInstance::SetFootLockOffsets(float DeltaSeconds, FVector& LocalLoc, FRotator& LocalRot)
+void UOnaCharacterAnimInstance::SetFootLockOffsets(float DeltaSeconds, FVector& OutLocalLoc, FRotator& OutLocalRot)
 {
 	
 }

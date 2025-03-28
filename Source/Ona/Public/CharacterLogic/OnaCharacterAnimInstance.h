@@ -103,10 +103,10 @@ private:
 	/** Foot IK */
 
 	void SetFootLocking(float DeltaSeconds, FName EnableFootIKCurve, FName FootLockCurve, FName IKFootBone,
-                          float& CurFootLockAlpha, bool& UseFootLockCurve,
-                          FVector& CurFootLockLoc, FRotator& CurFootLockRot);
+                          float& OutCurFootLockAlpha, bool& OutUseFootLockCurve,
+                          FVector& OutCurFootLockLoc, FRotator& OutCurFootLockRot);
 
-	void SetFootLockOffsets(float DeltaSeconds, FVector& LocalLoc, FRotator& LocalRot);
+	void SetFootLockOffsets(float DeltaSeconds, FVector& OutLocalLoc, FRotator& OutLocalRot);
 
 	void SetPelvisIKOffset(float DeltaSeconds, FVector FootOffsetLTarget, FVector FootOffsetRTarget);
 
