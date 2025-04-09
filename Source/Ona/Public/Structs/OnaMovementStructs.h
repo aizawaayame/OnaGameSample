@@ -15,6 +15,94 @@
 
 class UCurveVector;
 
+
+USTRUCT(BlueprintType)
+struct FOnaComponentAndTransform
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, Category = "Character Struct Library")
+	FTransform Transform = FTransform::Identity;
+
+	UPROPERTY(EditAnywhere, Category = "Character Struct Library")
+	TObjectPtr<UPrimitiveComponent> Component = nullptr;
+};
+
+USTRUCT(BlueprintType)
+struct FOnaMantleParams
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category = "Mantle System")
+	TObjectPtr<UAnimMontage> AnimMontage = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Mantle System")
+	TObjectPtr<UCurveVector> PositionCorrectionCurve = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Mantle System")
+	float StartingPosition = 0.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Mantle System")
+	float PlayRate = 0.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Mantle System")
+	FVector StartingOffset = FVector::ZeroVector;
+};
+
+USTRUCT(BlueprintType)
+struct FOnaMantleTraceSettings
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category = "Mantle System")
+	float MaxLedgeHeight = 0.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Mantle System")
+	float MinLedgeHeight = 0.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Mantle System")
+	float ReachDistance = 0.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Mantle System")
+	float ForwardTraceRadius = 0.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Mantle System")
+	float DownwardTraceRadius = 0.0f;
+};
+
+USTRUCT(BlueprintType)
+struct FOnaMantleAsset
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category = "Mantle System")
+	TObjectPtr<UAnimMontage> AnimMontage = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Mantle System")
+	TObjectPtr<UCurveVector> PositionCorrectionCurve = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Mantle System")
+	FVector StartingOffset = FVector::ZeroVector;
+
+	UPROPERTY(EditAnywhere, Category = "Mantle System")
+	float LowHeight = 0.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Mantle System")
+	float LowPlayRate = 0.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Mantle System")
+	float LowStartPosition = 0.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Mantle System")
+	float HighHeight = 0.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Mantle System")
+	float HighPlayRate = 0.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Mantle System")
+	float HighStartPosition = 0.0f;
+};
+
 /**
  * \brief  不同步态速度和步态曲线
  */

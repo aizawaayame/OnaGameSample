@@ -22,4 +22,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "ALS|Math Library")
 	static EOnaMovementDirection CalculateQuadrant(FOnaMovementDirection Current, float FRThreshold, float FLThreshold, float BRThreshold,float BLThreshold, float Spring, float Angle);
+
+	UFUNCTION(BlueprintCallable, Category = "ALS|Math Library")
+	static FVector GetCapsuleBaseLocation(float ZOffset, UCapsuleComponent* Capsule);
 };

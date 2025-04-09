@@ -6,6 +6,7 @@
 #include "Enums/OnaMovementDirection.h"
 #include "Structs/OnaMovementStructs.h"
 
+#include "Components/CapsuleComponent.h"
 /**
  * \brief 检查角度是否在范围内
  * \param Angle 检查角度
@@ -41,4 +42,10 @@ EOnaMovementDirection UOnaMathLibrary::CalculateQuadrant(FOnaMovementDirection C
 	}
 
 	return EOnaMovementDirection::Backward;
+}
+
+FVector UOnaMathLibrary::GetCapsuleBaseLocation(float ZOffset, UCapsuleComponent* Capsule)
+{
+	return Capsule->GetComponentLocation() -
+	Capsule->GetUpVector() * (Capsule->GetScaledCapsuleHalfHeight() + ZOffset);
 }

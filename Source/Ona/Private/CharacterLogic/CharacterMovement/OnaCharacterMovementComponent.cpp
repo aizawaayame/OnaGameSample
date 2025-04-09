@@ -1,4 +1,4 @@
-﻿#include "CharacterLogic/OnaCharacterMovementComponent.h"
+﻿#include "CharacterLogic/CharacterMovement//OnaCharacterMovementComponent.h"
 
 #include "Curves/CurveVector.h"
 #include "GameFramework/Character.h"

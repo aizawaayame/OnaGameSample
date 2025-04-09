@@ -3,7 +3,7 @@
 
 #include "CameraSystem/OnaPlayerCameraBehavior.h"
 #include "CharacterLogic/OnaCharacterDebugComponent.h"
-#include "CharacterLogic/OnaCharacterMovementComponent.h"
+#include "CharacterLogic/CharacterMovement/OnaCharacterMovementComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Curves/CurveFloat.h"
 #include "Kismet/KismetMathLibrary.h"
