@@ -28,7 +28,7 @@ bool UOnaMantleComponent::MantleCheck(const FOnaMantleTraceSettings& TraceSettin
 		return false;
 	}
 
-	// Step 1: Trace forward to find a wall / object the character cannot walk on.
+	// Step 1: 向前检测到wall且不是walkable
 	const FVector& TraceDirection = OwnerCharacter->GetActorForwardVector();
 	const FVector& CapsuleBaseLocation = UOnaMathLibrary::GetCapsuleBaseLocation(2.f, OwnerCharacter->GetCapsuleComponent());
 	FVector TraceStart = CapsuleBaseLocation + TraceDirection * -30.f;
@@ -77,7 +77,7 @@ bool UOnaMantleComponent::MantleCheck(const FOnaMantleTraceSettings& TraceSettin
 	const FVector InitialTraceImpactPoint = HitResult.ImpactPoint;
 	const FVector InitialTraceNormal = HitResult.ImpactNormal;
 
-	// Step 2: Trace downward from the first trace's Impact Point and determine if the hit location is walkable.
+	// Step 2: 向下投射线检测如果攀爬后的平面是否walkable
 	FVector DownwardTraceEnd = InitialTraceImpactPoint;
 	DownwardTraceEnd.Z = CapsuleBaseLocation.Z;
 	DownwardTraceEnd += InitialTraceNormal * -15.0f;
@@ -111,9 +111,37 @@ bool UOnaMantleComponent::MantleCheck(const FOnaMantleTraceSettings& TraceSettin
 	const FVector DownTraceLocation(HitResult.Location.X, HitResult.Location.Y, HitResult.ImpactPoint.Z);
 	UPrimitiveComponent* HitComponent = HitResult.GetComponent();
 
-	// Step 3: Check if the capsule has room to stand at the downward trace's location.
-	// If so, set that location as the Target Transform and calculate the mantle height.
+	// Step 3: 检测落脚点是否有足够的空间
+	const FVector& CapsuleLocationFromBase = UOnaMathLibrary::GetCapsuleLocationFromBase(DownTraceLocation, 2.f, OwnerCharacter->GetCapsuleComponent());
+	const bool bCapsuleHasRoom = UOnaMathLibrary::CapsuleHasRoomCheck(OwnerCharacter->GetCapsuleComponent(), CapsuleLocationFromBase, 0.f, 0.f, DebugType, OnaCharacterDebugComponent && OnaCharacterDebugComponent->GetShowTraces());
+	if (!bCapsuleHasRoom)
+	{
+		return false;
+	}
 
+	const FTransform TargetTransform((InitialTraceNormal * FVector(-1, -1, 0)).ToOrientationRotator(),
+		CapsuleLocationFromBase,
+		FVector::OneVector);
+
+	// Step 4: 计算MantleType
+	const float MantleHeight = (CapsuleLocationFromBase - OwnerCharacter->GetActorLocation()).Z;
+	EOnaMantleType MantleType;
+	if (OwnerCharacter->GetMovementState() == EOnaMovementState::InAir)
+	{
+		MantleType = EOnaMantleType::FallingCatch;
+	}
+	else
+	{
+		MantleType = MantleHeight > 125.0f ? EOnaMantleType::HighMantle : EOnaMantleType::LowMantle;
+	}
+
+	// 触发MantleStart
+	FOnaComponentAndTransform MantleWS;
+	MantleWS.Component = HitComponent;
+	MantleWS.Transform = TargetTransform;
+	MantleStart(MantleHeight, MantleWS, MantleType);
+	Server_MantleStart(MantleHeight, MantleWS, MantleType);
+	
 	return true;
 }
 
@@ -178,9 +206,14 @@ void UOnaMantleComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
 void UOnaMantleComponent::Multicast_MantleStart_Implementation(float MantleHeight, const FOnaComponentAndTransform& MantleLedgeWS, EOnaMantleType MantleType)
 {
+	if (OwnerCharacter && !OwnerCharacter->IsLocallyControlled())
+	{
+		MantleStart(MantleHeight, MantleLedgeWS, MantleType);
+	}
 }
 
 void UOnaMantleComponent::Server_MantleStart_Implementation(float MantleHeight, const FOnaComponentAndTransform& MantleLedgeWS, EOnaMantleType MantleType)
 {
+	Multicast_MantleStart(MantleHeight, MantleLedgeWS, MantleType);
 }
 
