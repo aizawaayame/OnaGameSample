@@ -136,6 +136,10 @@ public:
 #pragma endregion
 
 #pragma region Movement System
+
+	UFUNCTION(BlueprintCallable, Category = "ALS|Rotation System")
+	void SetActorLocationAndTargetRotation(FVector NewLocation, FRotator NewRotation);
+	
 	UFUNCTION(BlueprintGetter, Category = "Movement System")
 	FORCEINLINE bool HasMovementInput() const { return bHasMovementInput; }
 

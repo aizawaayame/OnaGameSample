@@ -8,6 +8,16 @@
 #include "Structs/OnaMovementStructs.h"
 
 #include "Components/CapsuleComponent.h"
+
+FTransform UOnaMathLibrary::MantleComponentLocalToWorld(const FOnaComponentAndTransform& CompAndTransform)
+{
+	const FTransform& InverseTransform = CompAndTransform.Component->GetComponentToWorld().Inverse();
+	const FVector Location = InverseTransform.InverseTransformPosition(CompAndTransform.Transform.GetLocation());
+	const FQuat Quat = InverseTransform.InverseTransformRotation(CompAndTransform.Transform.GetRotation());
+	const FVector Scale = InverseTransform.InverseTransformPosition(CompAndTransform.Transform.GetScale3D());
+	return {Quat, Location, Scale};
+}
+
 /**
  * \brief 检查角度是否在范围内
  * \param Angle 检查角度

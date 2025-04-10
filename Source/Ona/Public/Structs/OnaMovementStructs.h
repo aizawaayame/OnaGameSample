@@ -39,12 +39,14 @@ struct FOnaMantleParams
 	UPROPERTY(EditAnywhere, Category = "Mantle System")
 	TObjectPtr<UCurveVector> PositionCorrectionCurve = nullptr;
 
+	// 动画播放的起始位置
 	UPROPERTY(EditAnywhere, Category = "Mantle System")
 	float StartingPosition = 0.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Mantle System")
 	float PlayRate = 0.0f;
 
+	// 用于倒推位移的最佳路径，防止穿模
 	UPROPERTY(EditAnywhere, Category = "Mantle System")
 	FVector StartingOffset = FVector::ZeroVector;
 };

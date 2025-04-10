@@ -165,6 +165,12 @@ void AOnaCharacterBase::GetCameraParameters(float& TPFOVOut, float& FPFOVOut, bo
 	bRightShoulderOut = bRightShoulder;
 }
 
+void AOnaCharacterBase::SetActorLocationAndTargetRotation(FVector NewLocation, FRotator NewRotation)
+{
+	SetActorLocationAndRotation(NewLocation, NewRotation);
+	TargetRotation = NewRotation;
+}
+
 FOnaMovementSettings AOnaCharacterBase::GetTargetMovementSettings() const
 {
 	if (RotationMode == EOnaRotationMode::VelocityDirection)

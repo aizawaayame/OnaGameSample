@@ -6,7 +6,10 @@
 #include "CharacterLogic/OnaCharacterBase.h"
 #include "CharacterLogic/OnaCharacterDebugComponent.h"
 #include "Components/TimelineComponent.h"
+#include "Curves/CurveVector.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetMaterialLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Math/OnaMathLibrary.h"
 
 
@@ -152,14 +155,142 @@ bool UOnaMantleComponent::MantleCheck(const FOnaMantleTraceSettings& TraceSettin
 
 void UOnaMantleComponent::MantleStart(float MantleHeight, const FOnaComponentAndTransform& MantleLedgeWS, EOnaMantleType MantleType)
 {
+	if (OwnerCharacter == nullptr || !IsValid(MantleLedgeWS.Component) || !IsValid(MantleTimeline))
+	{
+		return;
+	}
+	
+	if (MantleType != EOnaMantleType::LowMantle && OwnerCharacter->IsA(AOnaCharacterBase::StaticClass()))
+	{
+		// Cast<AOnaCharacterBase>(OwnerCharacter)->ClearHeldObject();
+	}
+	
+	SetComponentTickEnabledAsync(false);
+	
+	const FOnaMantleAsset MantleAsset = GetMantleAsset(MantleType, OwnerCharacter->GetOverlayState());
+	check(MantleAsset.PositionCorrectionCurve);
+
+	// Step 1: 通过攀爬高度(Mantle Height)将Mantle Asset换算成Mantle Params
+	MantleParams.AnimMontage = MantleAsset.AnimMontage;
+	MantleParams.PositionCorrectionCurve = MantleAsset.PositionCorrectionCurve;
+	MantleParams.StartingOffset = MantleAsset.StartingOffset;
+	MantleParams.StartingPosition = FMath::GetMappedRangeValueClamped<float, float>(
+		{MantleAsset.LowHeight, MantleAsset.HighHeight},
+		{MantleAsset.LowStartPosition, MantleAsset.HighStartPosition},
+		MantleHeight);
+	MantleParams.PlayRate = FMath::GetMappedRangeValueClamped<float, float>(
+		{MantleAsset.LowHeight, MantleAsset.HighHeight},
+		{MantleAsset.LowPlayRate, MantleAsset.HighPlayRate},
+		MantleHeight);
+
+	// Step 2: 将世界坐标系中的攀爬目标的Transform转换成以障碍物Component为基准的局部坐标系Transform
+	// 换算后Mantle Ledge WS中的Transform分量是相对于Hit Component的常量，如果Hit Component发生了移动，那么用Hit Component和Transform分量就可以计算出新的Mantle Ledge WS。
+	MantleLedgeLS.Component = MantleLedgeWS.Component;
+	MantleLedgeLS.Transform = MantleLedgeWS.Transform * MantleLedgeWS.Component->GetComponentToWorld().Inverse();
+
+	// Step 3: 初始化攀爬目标(Mantle Target)和攀爬实际偏差量(Mantle Actual Start Offset)
+	MantleTarget = MantleLedgeWS.Transform;
+	MantleActualStartOffset = UOnaMathLibrary::TransformSub(OwnerCharacter->GetActorTransform(), MantleTarget);
+
+	// Step 4: 初始化攀爬动画偏差量(Mantle Animated Start Offset)
+	// 如果直接从角色起始位置过渡到目标位置，一般会出现穿模问题，所以我们希望攀爬路径是一个弧线。
+	// 通过动画偏差量(Mantle Animated Start Offset)在时间轴上和目标位置的混合就可以构成这个攀爬弧线。
+	FVector RotatedVector = MantleTarget.GetRotation().Vector() * MantleParams.StartingOffset.Y;
+	RotatedVector.Z = MantleParams.StartingOffset.Z;
+	const FTransform StartOffset(MantleTarget.Rotator(), MantleTarget.GetLocation() - RotatedVector,
+								 FVector::OneVector);
+	MantleAnimatedStartOffset = UOnaMathLibrary::TransformSub(StartOffset, MantleTarget);
+
+	// Step 5: 设置Movement Mode和Movement State
+	OwnerCharacter->GetCharacterMovement()->SetMovementMode(MOVE_None);
+	OwnerCharacter->SetMovementState(EOnaMovementState::Mantling);
+
+	// Step 6: 设置Timeline,关键是让Timeline的长度和曲线实际长度（曲线总长减去起点位置）相同, Timeline的PlayRate和动画的PlayRate也必须相同;设置完毕后，开启Timeline
+	float MinTime = 0.0f;
+	float MaxTime = 0.0f;
+	MantleParams.PositionCorrectionCurve->GetTimeRange(MinTime, MaxTime);
+	MantleTimeline->SetTimelineLength(MaxTime - MantleParams.StartingPosition);
+	MantleTimeline->SetPlayRate(MantleParams.PlayRate);
+	MantleTimeline->PlayFromStart();
+
+	// Step 7: 播放蒙太奇动画
+	if (MantleParams.AnimMontage && OwnerCharacter->GetMesh()->GetAnimInstance())
+	{
+		OwnerCharacter->GetMesh()->GetAnimInstance()->Montage_Play(MantleParams.AnimMontage, MantleParams.PlayRate,
+															EMontagePlayReturnType::MontageLength,
+															MantleParams.StartingPosition, false);
+	}
 }
 
 void UOnaMantleComponent::MantleUpdate(float BlendIn)
 {
+	if (!OwnerCharacter)
+	{
+		return;
+	}
+
+	MantleTarget = UOnaMathLibrary::MantleComponentLocalToWorld(MantleLedgeLS);
+
+	const FVector CurveVec = MantleParams.PositionCorrectionCurve->GetVectorValue(
+		MantleParams.StartingPosition + MantleTimeline->GetPlaybackPosition());
+	
+	const float PositionAlpha = CurveVec.X;
+	const float XYCorrectionAlpha = CurveVec.Y;
+	const float ZCorrectionAlpha = CurveVec.Z;
+
+	const FTransform TargetHzTransform(MantleAnimatedStartOffset.GetRotation(),
+		{
+			MantleAnimatedStartOffset.GetLocation().X,
+			MantleAnimatedStartOffset.GetLocation().Y,
+			MantleAnimatedStartOffset.GetLocation().Z
+		},
+		FVector::OneVector);
+
+	const FTransform& HzLerpResult = UKismetMathLibrary::TLerp(
+		MantleActualStartOffset,
+		TargetHzTransform,
+		XYCorrectionAlpha);
+
+	const FTransform TargetVtTransform(MantleActualStartOffset.GetRotation(),
+								   {
+									   MantleActualStartOffset.GetLocation().X,
+									   MantleActualStartOffset.GetLocation().Y,
+									   MantleAnimatedStartOffset.GetLocation().Z
+								   },
+								   FVector::OneVector);
+	const FTransform& VtLerpResult =
+		UKismetMathLibrary::TLerp(MantleActualStartOffset, TargetVtTransform, ZCorrectionAlpha);
+
+	const FTransform ResultTransform(HzLerpResult.GetRotation(),
+									 {
+										 HzLerpResult.GetLocation().X, HzLerpResult.GetLocation().Y,
+										 VtLerpResult.GetLocation().Z
+									 },
+									 FVector::OneVector);
+
+	const FTransform& ResultLerp = UKismetMathLibrary::TLerp(
+	UOnaMathLibrary::TransformAdd(MantleTarget, ResultTransform), MantleTarget,
+	PositionAlpha);
+
+	const FTransform& LerpedTarget =
+	UKismetMathLibrary::TLerp(UOnaMathLibrary::TransformAdd(MantleTarget, MantleActualStartOffset), ResultLerp,BlendIn);
+
+	OwnerCharacter->SetActorLocationAndTargetRotation(LerpedTarget.GetLocation(), LerpedTarget.GetRotation().Rotator());
 }
 
 void UOnaMantleComponent::MantleEnd()
 {
+	if (OwnerCharacter)
+	{
+		OwnerCharacter->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+
+		if (OwnerCharacter->IsA(AOnaCharacterBase::StaticClass()))
+		{
+			// Cast<AOnaCharacterBase>(OwnerCharacter)->UpdateHeldObject();
+		}
+	}
+
+	SetComponentTickEnabledAsync(true);
 }
 
 void UOnaMantleComponent::OnOwnerJumpInput()
