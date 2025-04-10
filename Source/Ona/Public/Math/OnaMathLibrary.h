@@ -5,8 +5,10 @@
 #include "CoreMinimal.h"
 #include "Enums/OnaMovementDirection.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "OnaMathLibrary.generated.h"
 
+class UCapsuleComponent;
 struct FOnaMovementDirection;
 /**
  * 
@@ -25,4 +27,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "ALS|Math Library")
 	static FVector GetCapsuleBaseLocation(float ZOffset, UCapsuleComponent* Capsule);
+
+	UFUNCTION(BlueprintCallable, Category = "ALS|Math Utils")
+	static FVector GetCapsuleLocationFromBase(FVector BaseLocation, float ZOffset, UCapsuleComponent* Capsule);
+
+	UFUNCTION(BlueprintCallable, Category = "ALS|Math Utils")
+	static bool CapsuleHasRoomCheck(UCapsuleComponent* Capsule, FVector TargetLocation, float HeightOffset,
+									float RadiusOffset, EDrawDebugTrace::Type DebugType = EDrawDebugTrace::Type::None, bool DrawDebugTrace = false);
 };

@@ -6,13 +6,9 @@
 #include "Components/ActorComponent.h"
 #include "Enums/OnaMantleType.h"
 #include "Structs/OnaMovementStructs.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "OnaMantleComponent.generated.h"
 
-
-namespace EDrawDebugTrace
-{
-enum Type : int;
-}
 
 class UTimelineComponent;
 class UOnaCharacterDebugComponent;
