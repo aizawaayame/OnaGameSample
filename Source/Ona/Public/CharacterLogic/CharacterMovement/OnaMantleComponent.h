@@ -101,8 +101,10 @@ protected:
 	/** If a dynamic object has a velocity bigger than this value, do not start mantle */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "ALS|Mantle System")
 	float AcceptableVelocityWhileMantling = 10.0f;
-private:
 
+private:
+	
+	UPROPERTY()
 	TObjectPtr<AOnaCharacterBase> OwnerCharacter;
 
 	UPROPERTY()
