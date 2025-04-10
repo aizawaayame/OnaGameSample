@@ -37,10 +37,7 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "ALS|Mantle System")
 	void OnOwnerJumpInput();
-
-	UFUNCTION(BlueprintCallable, Category = "ALS|Mantle System")
-	void OnOwnerRagdollStateChanged(bool bRagdollState);
-
+	
 	/** Implement on BP to get correct mantle parameter set according to character state */
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "ALS|Mantle System")
 	FOnaMantleAsset GetMantleAsset(EOnaMantleType MantleType, EOnaOverlayState CurrentOverlayState);

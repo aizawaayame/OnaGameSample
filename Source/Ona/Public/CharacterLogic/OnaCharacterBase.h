@@ -290,9 +290,10 @@ protected:
 	
 #pragma endregion 
 
-protected:
+
 	
 #pragma region Props
+public:
 #pragma region Delegates
 	UPROPERTY(BlueprintAssignable, Category = "ALS|Input")
 	FJumpPressedSignature JumpPressedDelegate;
@@ -300,7 +301,9 @@ protected:
 	UPROPERTY(BlueprintAssignable, Category = "ALS|Input")
 	FOnJumpedSignature OnJumpedDelegate;
 	
-#pragma endregion 
+#pragma endregion
+
+protected:
 #pragma region Component
 	UPROPERTY()
 	TObjectPtr<UOnaCharacterMovementComponent> OnaCharacterMovement;

@@ -5,20 +5,25 @@
 
 #include "CharacterLogic/OnaCharacterBase.h"
 #include "CharacterLogic/OnaCharacterDebugComponent.h"
+#include "Components/TimelineComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Math/OnaMathLibrary.h"
 
 
+const FName NAME_MantleEnd(TEXT("MantleEnd"));
+const FName NAME_MantleUpdate(TEXT("MantleUpdate"));
+const FName NAME_MantleTimeline(TEXT("MantleTimeline"));
+
 FName UOnaMantleComponent::NAME_IgnoreOnlyPawn(TEXT("IgnoreOnlyPawn"));
 
-// Sets default values for this component's properties
+
 UOnaMantleComponent::UOnaMantleComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
 
-	// ...
+	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bStartWithTickEnabled = true;
+
+	MantleTimeline = CreateDefaultSubobject<UTimelineComponent>(NAME_MantleTimeline);
 }
 
 bool UOnaMantleComponent::MantleCheck(const FOnaMantleTraceSettings& TraceSettings, EDrawDebugTrace::Type DebugType)
@@ -175,17 +180,33 @@ void UOnaMantleComponent::OnOwnerJumpInput()
 	}
 }
 
-void UOnaMantleComponent::OnOwnerRagdollStateChanged(bool bRagdollState)
-{
-}
-
-
 // Called when the game starts
 void UOnaMantleComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
+	if (GetOwner())
+	{
+		OwnerCharacter = Cast<AOnaCharacterBase>(GetOwner());
+		if (OwnerCharacter)
+		{
+			OnaCharacterDebugComponent = OwnerCharacter->FindComponentByClass<UOnaCharacterDebugComponent>();
+
+			AddTickPrerequisiteActor(OwnerCharacter);
+
+			FOnTimelineFloat TimelineUpdated;
+			FOnTimelineEvent TimelineFinished;
+			TimelineUpdated.BindUFunction(this, NAME_MantleUpdate);
+			TimelineFinished.BindUFunction(this, NAME_MantleEnd);
+			MantleTimeline->SetTimelineFinishedFunc(TimelineFinished);
+			MantleTimeline->SetLooping(false);
+			MantleTimeline->SetTimelineLengthMode(TL_TimelineLength);
+			MantleTimeline->AddInterpFloat(MantleTimelineCurve, TimelineUpdated);
+
+			OwnerCharacter->JumpPressedDelegate.AddUniqueDynamic(this,
+				&UOnaMantleComponent::OnOwnerJumpInput);
+		}
+	}
 	
 }
 
