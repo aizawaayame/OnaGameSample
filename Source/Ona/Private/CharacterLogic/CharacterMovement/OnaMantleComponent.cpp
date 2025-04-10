@@ -238,43 +238,48 @@ void UOnaMantleComponent::MantleUpdate(float BlendIn)
 	const float XYCorrectionAlpha = CurveVec.Y;
 	const float ZCorrectionAlpha = CurveVec.Z;
 
-	const FTransform TargetHzTransform(MantleAnimatedStartOffset.GetRotation(),
+	// 修正水平方向位置Offset
+	const FTransform TargetHzOffsetTransform(MantleAnimatedStartOffset.GetRotation(),
 		{
 			MantleAnimatedStartOffset.GetLocation().X,
 			MantleAnimatedStartOffset.GetLocation().Y,
 			MantleAnimatedStartOffset.GetLocation().Z
 		},
 		FVector::OneVector);
-
-	const FTransform& HzLerpResult = UKismetMathLibrary::TLerp(
+	
+	const FTransform& HzLerpResultOffset = UKismetMathLibrary::TLerp(
 		MantleActualStartOffset,
-		TargetHzTransform,
+		TargetHzOffsetTransform,
 		XYCorrectionAlpha);
 
-	const FTransform TargetVtTransform(MantleActualStartOffset.GetRotation(),
+	// 修正垂直方向位置Offset
+	const FTransform TargetVtOffsetTransform(MantleActualStartOffset.GetRotation(),
 								   {
 									   MantleActualStartOffset.GetLocation().X,
 									   MantleActualStartOffset.GetLocation().Y,
 									   MantleAnimatedStartOffset.GetLocation().Z
 								   },
 								   FVector::OneVector);
-	const FTransform& VtLerpResult =
-		UKismetMathLibrary::TLerp(MantleActualStartOffset, TargetVtTransform, ZCorrectionAlpha);
+	const FTransform& VtLerpResultOffset =
+		UKismetMathLibrary::TLerp(MantleActualStartOffset, TargetVtOffsetTransform, ZCorrectionAlpha);
 
-	const FTransform ResultTransform(HzLerpResult.GetRotation(),
+	// 取修正后Offset的值
+	const FTransform ResultOffsetTransform(HzLerpResultOffset.GetRotation(),
 									 {
-										 HzLerpResult.GetLocation().X, HzLerpResult.GetLocation().Y,
-										 VtLerpResult.GetLocation().Z
+										 HzLerpResultOffset.GetLocation().X, HzLerpResultOffset.GetLocation().Y,
+										 VtLerpResultOffset.GetLocation().Z
 									 },
 									 FVector::OneVector);
 
+	// 插值反算ResultTransform
 	const FTransform& ResultLerp = UKismetMathLibrary::TLerp(
-	UOnaMathLibrary::TransformAdd(MantleTarget, ResultTransform), MantleTarget,
+	UOnaMathLibrary::TransformAdd(MantleTarget, ResultOffsetTransform), MantleTarget,
 	PositionAlpha);
 
 	const FTransform& LerpedTarget =
-	UKismetMathLibrary::TLerp(UOnaMathLibrary::TransformAdd(MantleTarget, MantleActualStartOffset), ResultLerp,BlendIn);
+	UKismetMathLibrary::TLerp(UOnaMathLibrary::TransformAdd(MantleTarget, MantleActualStartOffset), ResultLerp, BlendIn);
 
+	// 将结果位移应用到角色上
 	OwnerCharacter->SetActorLocationAndTargetRotation(LerpedTarget.GetLocation(), LerpedTarget.GetRotation().Rotator());
 }
 

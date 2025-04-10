@@ -90,9 +90,11 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "ALS|Mantle System")
 	FTransform MantleTarget = FTransform::Identity;
 
+	// Mantle起始位置->MantleTarget的向量
 	UPROPERTY(BlueprintReadOnly, Category = "ALS|Mantle System")
 	FTransform MantleActualStartOffset = FTransform::Identity;
 
+	// 反算出的动画起始位置->MantleTarget的向量
 	UPROPERTY(BlueprintReadOnly, Category = "ALS|Mantle System")
 	FTransform MantleAnimatedStartOffset = FTransform::Identity;
 

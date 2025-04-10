@@ -36,17 +36,22 @@ struct FOnaMantleParams
 	UPROPERTY(EditAnywhere, Category = "Mantle System")
 	TObjectPtr<UAnimMontage> AnimMontage = nullptr;
 
+	// 动画X，Y，Z的位置修正曲线 1->1
+	// X：混合Target曲线
+	// Y：水平修正到动画起始点曲线
+	// Z：Z轴修正到动画起始点曲线
 	UPROPERTY(EditAnywhere, Category = "Mantle System")
 	TObjectPtr<UCurveVector> PositionCorrectionCurve = nullptr;
 
-	// 动画播放的起始位置
+	// 动画播放的起始位置。计算方式 实际运行时计算的MantleHeight ： MantleAsset决定(LowHeight, HighHeight)-> MantleAsset决定(LowStartPosition, HighStartPosition)
 	UPROPERTY(EditAnywhere, Category = "Mantle System")
 	float StartingPosition = 0.0f;
 
+	// 动画播放的速率。计算方式 实际运行时计算的MantleHeight ： MantleAsset决定(LowHeight, HighHeight)-> MantleAsset决定(LowPlayRate, HighPlayRate)
 	UPROPERTY(EditAnywhere, Category = "Mantle System")
 	float PlayRate = 0.0f;
 
-	// 用于倒推位移的最佳路径，防止穿模
+	// 用于倒推位移的最佳路径，防止穿模，计算方法是通过动画的起始位置和结束位置来反算出来的。在本项目中固定位(0, 65, 100 low/200 high)
 	UPROPERTY(EditAnywhere, Category = "Mantle System")
 	FVector StartingOffset = FVector::ZeroVector;
 };
