@@ -5,7 +5,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
-#include "CameraSystem/OnaPlayerCameraManager.h"
+#include "CameraSystem/OnaPlayerCameraManager_Old.h"
 #include "CharacterLogic/OnaCharacterBase.h"
 #include "CharacterLogic/OnaCharacterDebugComponent.h"
 #include "Engine/LocalPlayer.h"
@@ -121,7 +121,7 @@ void AOnaPlayerController::SetupInputs()
  */
 void AOnaPlayerController::SetupCamera()
 {
-	AOnaPlayerCameraManager* CastedMgr = Cast<AOnaPlayerCameraManager>(PlayerCameraManager);
+	AOnaPlayerCameraManager_Old* CastedMgr = Cast<AOnaPlayerCameraManager_Old>(PlayerCameraManager);
 	if (PossessedCharacter && CastedMgr)
 	{
 		CastedMgr->OnPossess(PossessedCharacter);

@@ -1,6 +1,6 @@
 ﻿#include "CharacterLogic/OnaCharacterDebugComponent.h"
 
-#include "CameraSystem/OnaPlayerCameraManager.h"
+#include "CameraSystem/OnaPlayerCameraManager_Old.h"
 #include "CharacterLogic/OnaCharacterBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
@@ -58,7 +58,7 @@ void UOnaCharacterDebugComponent::TickComponent(float DeltaTime, enum ELevelTick
 		APlayerController* Controller = Cast<APlayerController>(OwnerCharacter->GetController());
 		if (Controller)
 		{
-			AOnaPlayerCameraManager* CamManager = Cast<AOnaPlayerCameraManager>(Controller->PlayerCameraManager);
+			AOnaPlayerCameraManager_Old* CamManager = Cast<AOnaPlayerCameraManager_Old>(Controller->PlayerCameraManager);
 			if (CamManager)
 			{
 				CamManager->DrawDebugTargets(OwnerCharacter->GetThirdPersonPivotTarget().GetLocation());

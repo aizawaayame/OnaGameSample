@@ -1,5 +1,5 @@
 
-#include "CameraSystem/OnaPlayerCameraManager.h"
+#include "CameraSystem/OnaPlayerCameraManager_Old.h"
 #include "CameraSystem/OnaPlayerCameraBehavior.h"
 #include "CharacterLogic/OnaCharacterBase.h"
 #include "CharacterLogic/OnaCharacterDebugComponent.h"
@@ -19,7 +19,7 @@ const FName NAME_PivotOffset_Z(TEXT("PivotOffset_Z"));
 const FName NAME_RotationLagSpeed(TEXT("RotationLagSpeed"));
 const FName NAME_Weight_FirstPerson(TEXT("Weight_FirstPerson"));
 
-AOnaPlayerCameraManager::AOnaPlayerCameraManager()
+AOnaPlayerCameraManager_Old::AOnaPlayerCameraManager_Old()
 {
 	CameraBehavior = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CameraBehavior"));
 	CameraBehavior->SetupAttachment(GetRootComponent());
@@ -32,7 +32,7 @@ AOnaPlayerCameraManager::AOnaPlayerCameraManager()
  * Which is called by APlayerController::OnPosses in Server or APlayerController::OnRep_Pawn in Client
  * @param NewCharacter 
  */
-void AOnaPlayerCameraManager::OnPossess(AOnaCharacterBase* NewCharacter)
+void AOnaPlayerCameraManager_Old::OnPossess(AOnaCharacterBase* NewCharacter)
 {
 	check(NewCharacter);
 	ControlledCharacter = NewCharacter;
@@ -61,7 +61,7 @@ void AOnaPlayerCameraManager::OnPossess(AOnaCharacterBase* NewCharacter)
  * \param CurveName Curve Name
  * \return  
  */
-float AOnaPlayerCameraManager::GetCameraBehaviorParam(FName CurveName) const
+float AOnaPlayerCameraManager_Old::GetCameraBehaviorParam(FName CurveName) const
 {
 	UAnimInstance* Inst = CameraBehavior->GetAnimInstance();
 	if (Inst)
@@ -78,7 +78,7 @@ float AOnaPlayerCameraManager::GetCameraBehaviorParam(FName CurveName) const
  * \param VTOut 
  * \param DeltaTime
  */
-void AOnaPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& VTOut, float DeltaTime)
+void AOnaPlayerCameraManager_Old::UpdateViewTargetInternal(FTViewTarget& VTOut, float DeltaTime)
 {
 	if (VTOut.Target)
 	{
@@ -111,7 +111,7 @@ void AOnaPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& VTOut, floa
  * \param DeltaTime 
  * \return  
  */
-bool AOnaPlayerCameraManager::CustomCameraBehavior(float DeltaTime, FVector& LocationOut, FRotator& RotationOut, float& FOVPOut)
+bool AOnaPlayerCameraManager_Old::CustomCameraBehavior(float DeltaTime, FVector& LocationOut, FRotator& RotationOut, float& FOVPOut)
 {
 	if (!ControlledCharacter)
 	{
@@ -260,7 +260,7 @@ bool AOnaPlayerCameraManager::CustomCameraBehavior(float DeltaTime, FVector& Loc
  * \param TargetLocation Target Location，插值终点
  * \param CameraRotation Camera Rotation，会用到Yaw方向
  */
-FVector AOnaPlayerCameraManager::CalculateAxisIndependentLag(FVector CurrentLocation, FVector TargetLocation, FRotator CameraRotation, FVector LagSpeeds, float DeltaTime)
+FVector AOnaPlayerCameraManager_Old::CalculateAxisIndependentLag(FVector CurrentLocation, FVector TargetLocation, FRotator CameraRotation, FVector LagSpeeds, float DeltaTime)
 {
 	CameraRotation.Roll = 0.0f;
 	CameraRotation.Pitch = 0.0f;

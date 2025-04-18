@@ -1,16 +1,17 @@
 {
-  "Category": "",
-  "Description": "",
-  "EngineAssociation": "5.4",
-  "FileVersion": 3,
-  "Modules": [
-    {
-      "AdditionalDependencies": [
-        "Engine"
-      ],
-      "LoadingPhase": "Default",
-      "Name": "Ona",
-      "Type": "Runtime"
-    }
-  ]
+	"FileVersion": 3,
+	"EngineAssociation": "5.4",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "Ona",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine",
+				"CoreUObject"
+			]
+		}
+	]
 }

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Camera/PlayerCameraManager.h"
-#include "OnaPlayerCameraManager.generated.h"
+#include "OnaPlayerCameraManager_Old.generated.h"
 
 class UOnaCharacterDebugComponent;
 class AOnaCharacterBase;
@@ -12,11 +12,11 @@ class AOnaCharacterBase;
  * 
  */
 UCLASS(Blueprintable, BlueprintType)
-class ONA_API AOnaPlayerCameraManager : public APlayerCameraManager
+class ONA_API AOnaPlayerCameraManager_Old : public APlayerCameraManager
 {
 	GENERATED_BODY()
 public:
-	AOnaPlayerCameraManager();
+	AOnaPlayerCameraManager_Old();
 public:
 	UFUNCTION(BlueprintCallable,  Category = "ALS|Camera")
 	void OnPossess(AOnaCharacterBase* NewCharacter);
