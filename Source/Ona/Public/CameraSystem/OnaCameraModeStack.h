@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/NoExportTypes.h"
+#include "CameraModes/OnaCameraModeInterface.h"
 #include "OnaCameraModeStack.generated.h"
 
 struct FOnaCameraModeView;
-class UOnaCameraMode;
+class UOnaCameraMode_TP;
 /**
  * 
  */
@@ -23,7 +23,7 @@ public:
 	
 	bool IsStackActive() const { return bIsActive; }
 
-	void Push(TSubclassOf<UOnaCameraMode> CameraModeClass);
+	void Push(TSubclassOf<UOnaCameraMode_TP> CameraModeClass);
 
 	void Evaluate(float DeltaTime, FOnaCameraModeView& OutCameraModeView);
 	
@@ -34,9 +34,9 @@ private:
 	bool bIsActive;
 	
 	UPROPERTY()
-	TArray<TObjectPtr<UOnaCameraMode>> CameraModeInstances;
+	TArray<TObjectPtr<UOnaCameraMode_TP>> CameraModeInstances;
 
 	UPROPERTY()
-	TArray<TObjectPtr<UOnaCameraMode>> CameraModeStack;
+	TArray<TObjectPtr<UOnaCameraMode_TP>> CameraModeStack;
 	
 };

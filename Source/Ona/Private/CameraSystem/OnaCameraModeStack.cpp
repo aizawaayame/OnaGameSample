@@ -3,7 +3,7 @@
 
 #include "CameraSystem/OnaCameraModeStack.h"
 
-#include "CameraSystem/OnaCameraMode.h"
+#include "CameraSystem/CameraModes/OnaCameraMode_TP.h"
 
 UOnaCameraModeStack::UOnaCameraModeStack()
 {
@@ -40,7 +40,7 @@ void UOnaCameraModeStack::DeactivateStack()
 	}
 }
 
-void UOnaCameraModeStack::Push(TSubclassOf<UOnaCameraMode> CameraModeClass)
+void UOnaCameraModeStack::Push(TSubclassOf<UOnaCameraMode_TP> CameraModeClass)
 {
 }
 

@@ -255,7 +255,7 @@ bool AOnaPlayerCameraManager_Old::CustomCameraBehavior(float DeltaTime, FVector&
 }
 
 /**
- * \brief CurrentLocation和TargetLocation延CameraRotation的Yaw进行弧形插值 
+ * \brief 根据轴独立的插值计算平滑位置,CurrentLocation和TargetLocation延CameraRotation的Yaw进行弧形插值 
  * \param CurrentLocation Current Location，插值起点
  * \param TargetLocation Target Location，插值终点
  * \param CameraRotation Camera Rotation，会用到Yaw方向

@@ -2,8 +2,7 @@
 
 
 #include "CameraSystem/OnaCameraComponent.h"
-
-#include "CameraSystem/OnaCameraMode.h"
+#include "CameraSystem/CameraModes/OnaCameraMode_TP.h"
 
 void UOnaCameraComponent::GetCameraView(float DeltaTime, FMinimalViewInfo& DesiredView)
 {
