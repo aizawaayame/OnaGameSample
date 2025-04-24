@@ -28,22 +28,27 @@ FVector FOnaCameraModeProcessor::CalculateAxisIndependentLag(
 	return CameraRotation.RotateVector(ResultVector);
 }
 
-void FOnaCameraModeProcessor::HandleObstacleAvoidance(
-	ECollisionChannel TraceCollisionChannel,
-	float TraceRadius,
-	FVector TraceOrigin,
-	FVector TraceEnd,
-	FQuat TraceOrientation,
-	const TArray<AActor*>& IgnoredActors,
-	const UWorld* World)
+/**
+ * \brief 处理障碍物规避
+ * \param TraceCollisionChannel 碰撞通道
+ * \param TraceRadius 碰撞半径
+ * \param TraceOrigin 起点
+ * \param TraceEnd 终点
+ * \param TraceOrientation 旋转
+ * \param IgnoredActors 忽略的Actor
+ * \param World 世界对象
+ */
+bool FOnaCameraModeProcessor::SweepSingleByChannel(
+	const ECollisionChannel& TraceCollisionChannel,
+	const FCollisionQueryParams& QueryParams,
+	const float TraceRadius,
+	const FVector& TraceOrigin,
+	const FVector& TraceEnd,
+	const FQuat& TraceOrientation,
+	const UWorld* World,
+	FHitResult& HitResult)
 {
 	check(World);
-	
-	// Perform a sphere trace to check for obstacles
-	FHitResult HitResult;
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActors(IgnoredActors);
-
 	const FCollisionShape SphereCollisionShape = FCollisionShape::MakeSphere(TraceRadius);
 	const bool bHit = World->SweepSingleByChannel(
 		HitResult,
@@ -54,8 +59,5 @@ void FOnaCameraModeProcessor::HandleObstacleAvoidance(
 		SphereCollisionShape,
 		QueryParams);
 
-	if (HitResult.IsValidBlockingHit())
-	{
-		
-	}
+	return bHit;
 }

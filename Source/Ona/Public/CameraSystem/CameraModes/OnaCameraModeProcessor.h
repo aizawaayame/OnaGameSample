@@ -8,5 +8,13 @@ public:
 	static FVector CalculateAxisIndependentLag(
 		const FVector& CurrentLocation, const FVector& TargetLocation, FRotator CameraRotation, const FVector& LagSpeeds, float DeltaTime);
 
-	static void HandleObstacleAvoidance();
+	static bool SweepSingleByChannel(
+		const ECollisionChannel& TraceCollisionChannel,
+		const FCollisionQueryParams& QueryParams,
+		const float TraceRadius,
+		const FVector& TraceOrigin,
+		const FVector& TraceEnd,
+		const FQuat& TraceOrientation,
+		const UWorld* World,
+		FHitResult& HitResult);
 };

@@ -51,7 +51,33 @@ void UOnaCameraMode_TP::UpdateViewTarget(
 		UKismetMathLibrary::GetUpVector(SmoothedPOVTargetRotation) * CameraOffset.Z;
 
 	// 避障
+	ECollisionChannel TraceChannel = ECC_Visibility;
+	FVector TraceOrigin = Character->GetActorLocation();
+	float TraceRadius = 10.0f;
+	
+	UWorld* World = GetWorld();
+	check(World);
 
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(Character);
+	QueryParams.AddIgnoredActor(CameraManager);
+
+	FHitResult HitResult;
+	bool bHit = FOnaCameraModeProcessor::SweepSingleByChannel(
+		TraceChannel,
+		QueryParams,
+		TraceRadius,
+		TraceOrigin,
+		TargetPOVLocation,
+		FQuat::Identity,
+		GetWorld(),
+		HitResult);
+
+	if (bHit && HitResult.IsValidBlockingHit())
+	{
+		TargetPOVLocation += HitResult.Location - HitResult.TraceEnd;
+	}
+	
 	OutVT.POV.Location = TargetPOVLocation;
 	OutVT.POV.Rotation = TargetPOVRotation;
 	OutVT.POV.FOV = FOV;

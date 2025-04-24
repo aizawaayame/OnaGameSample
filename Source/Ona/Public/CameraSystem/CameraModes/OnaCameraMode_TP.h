@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "OnaCameraModeBase.h"
 #include "OnaCameraModeInterface.h"
 #include "OnaCameraMode_TP.generated.h"
 
@@ -17,8 +18,8 @@ struct FOnaCameraModeView
 /**
  * 
  */
-UCLASS(Abstract)
-class ONA_API UOnaCameraMode_TP : public UObject, public IOnaCameraModeInterface
+UCLASS()
+class ONA_API UOnaCameraMode_TP : public UOnaCameraModeBase
 {
 	GENERATED_BODY()
 public:
