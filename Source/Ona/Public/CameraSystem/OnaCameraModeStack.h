@@ -6,6 +6,7 @@
 #include "CameraModes/OnaCameraModeInterface.h"
 #include "OnaCameraModeStack.generated.h"
 
+class UOnaCameraModeBase;
 struct FOnaCameraModeView;
 class UOnaCameraMode_TP;
 /**
@@ -17,13 +18,9 @@ class ONA_API UOnaCameraModeStack : public UObject
 	GENERATED_BODY()
 public:
 	UOnaCameraModeStack();
-
-	void ActivateStack();
-	void DeactivateStack();
 	
-	bool IsStackActive() const { return bIsActive; }
-
-	void Push(TSubclassOf<UOnaCameraMode_TP> CameraModeClass);
+	
+	void Push(TSubclassOf<UOnaCameraModeBase> CameraModeClass);
 
 	void Evaluate(float DeltaTime, FOnaCameraModeView& OutCameraModeView);
 	
@@ -31,12 +28,14 @@ protected:
 	void UpdateStack(float DeltaTime);
 	void BlendStack(FOnaCameraModeView& OutCameraModeView) const;
 private:
-	bool bIsActive;
+
+	UOnaCameraModeBase* GetOrSpawnCameraModeInstance(TSubclassOf<UOnaCameraModeBase> CameraModeClass);
 	
+private:	
 	UPROPERTY()
-	TArray<TObjectPtr<UOnaCameraMode_TP>> CameraModeInstances;
+	TArray<TObjectPtr<UOnaCameraModeBase>> CameraModeInstances;
 
 	UPROPERTY()
-	TArray<TObjectPtr<UOnaCameraMode_TP>> CameraModeStack;
+	TArray<TObjectPtr<UOnaCameraModeBase>> CameraModeStack;
 	
 };

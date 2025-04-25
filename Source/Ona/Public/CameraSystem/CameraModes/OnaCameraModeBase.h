@@ -7,6 +7,8 @@
 #include "UObject/NoExportTypes.h"
 #include "OnaCameraModeBase.generated.h"
 
+
+
 /**
  * 
  */
@@ -20,11 +22,12 @@ class ONA_API UOnaCameraModeBase : public UObject, public IOnaCameraModeInterfac
 public:
 	virtual void OnPossessed(APlayerCameraManager* CameraManager);
 	
-	virtual void UpdateViewTarget(float DeltaTime, const FMinimalViewInfo& CameraCacheView,
-		const FRotator& ControlRotation, FTViewTarget& OutVT) override;
+	virtual FOnaCameraModeView& UpdateViewTarget(float DeltaTime, const FMinimalViewInfo& CameraCacheView,
+		const FRotator& ControlRotation, const FTViewTarget& VT) override;
 
 protected:
 	UPROPERTY()
 	TObjectPtr<APlayerCameraManager> CameraManager;
-	
+
+	FOnaCameraModeView OutCameraModeView;
 };

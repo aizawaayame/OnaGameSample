@@ -7,13 +7,7 @@
 #include "OnaCameraModeInterface.h"
 #include "OnaCameraMode_TP.generated.h"
 
-struct FOnaCameraModeView
-{
-	FVector Location;
-	FRotator Rotation;
-	FRotator ControlRotation;
-	float FOV;
-};
+
 
 /**
  * 
@@ -26,7 +20,8 @@ public:
 
 	UOnaCameraMode_TP();
 	
-	virtual void UpdateViewTarget(float DeltaTime, const FMinimalViewInfo& CameraCacheView, const FRotator& ControlRotation, FTViewTarget& OutVT) override;
+	virtual FOnaCameraModeView& UpdateViewTarget(float DeltaTime, const FMinimalViewInfo& CameraCacheView,
+		const FRotator& ControlRotation, const FTViewTarget& VT) final;
 
 protected:
 	FVector TargetPOVLocation;

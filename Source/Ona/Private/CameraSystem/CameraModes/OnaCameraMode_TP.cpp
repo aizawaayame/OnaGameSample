@@ -8,13 +8,13 @@ UOnaCameraMode_TP::UOnaCameraMode_TP()
 {
 }
 
-void UOnaCameraMode_TP::UpdateViewTarget(
+FOnaCameraModeView& UOnaCameraMode_TP::UpdateViewTarget(
 	float DeltaTime,
 	const FMinimalViewInfo& CameraCacheView,
 	const FRotator& ControlRotation,
-	FTViewTarget& OutVT)
+	const FTViewTarget& VT)
 {
-	AOnaCharacterBase* Character = Cast<AOnaCharacterBase>(OutVT.Target);
+	AOnaCharacterBase* Character = Cast<AOnaCharacterBase>(VT.Target);
 	check(Character);
 	
 	FRotator CameraRotation = GetCameraRotation(CameraCacheView);                                                                                                                                                                                                                                                            
@@ -78,7 +78,9 @@ void UOnaCameraMode_TP::UpdateViewTarget(
 		TargetPOVLocation += HitResult.Location - HitResult.TraceEnd;
 	}
 	
-	OutVT.POV.Location = TargetPOVLocation;
-	OutVT.POV.Rotation = TargetPOVRotation;
-	OutVT.POV.FOV = FOV;
+	OutCameraModeView.Location = TargetPOVLocation;
+	OutCameraModeView.Rotation = TargetPOVRotation;
+	OutCameraModeView.FOV = FOV;
+
+	return OutCameraModeView;
 }                                             

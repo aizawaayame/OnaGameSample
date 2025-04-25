@@ -14,7 +14,7 @@ class ONA_API UOnaCameraComponent : public UCameraComponent
 {
 	GENERATED_BODY()
 
-	virtual void GetCameraView(float DeltaTime, FMinimalViewInfo& DesiredView) override;
+	// virtual void GetCameraView(float DeltaTime, FMinimalViewInfo& DesiredView) override;
 
 private:
 	void UpdateCamera();

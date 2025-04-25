@@ -5,43 +5,41 @@
 
 #include "CameraSystem/CameraModes/OnaCameraMode_TP.h"
 
+
 UOnaCameraModeStack::UOnaCameraModeStack()
 {
-	bIsActive = true;
 }
 
-void UOnaCameraModeStack::ActivateStack()
+void UOnaCameraModeStack::Push(TSubclassOf<UOnaCameraModeBase> CameraModeClass)
 {
-	if (bIsActive)
-	{
+	if (!CameraModeClass)
 		return;
-	}
+	UOnaCameraModeBase* CameraModeInstance = GetOrSpawnCameraModeInstance(CameraModeClass);
+	check(CameraModeInstance);
 
-	bIsActive = true;
-	for (auto CameraMode : CameraModeStack)
+	int32 StackSize = CameraModeStack.Num();
+	
+	if (StackSize >= 0 && CameraModeStack[0] == CameraModeInstance)
 	{
-		check(CameraMode);
-		// CameraMode->OnActivation();
+		return;	
 	}
-}
 
-void UOnaCameraModeStack::DeactivateStack()
-{
-	if (!bIsActive)
+	int32 ExistingStackModeIdx = INDEX_NONE;
+	for (int32 i = 0; i < StackSize; ++i)
 	{
-		return;
+		if (CameraModeStack[i] == CameraModeInstance)
+		{
+			ExistingStackModeIdx = i;
+			break;
+		}
 	}
 
-	bIsActive = false;
-	for (auto CameraMode : CameraModeStack)
+	if (ExistingStackModeIdx != INDEX_NONE)
 	{
-		check(CameraMode);
-		// CameraMode->OnDeactivation();
+		CameraModeStack.RemoveAtSwap(ExistingStackModeIdx);
+		StackSize--;
 	}
-}
-
-void UOnaCameraModeStack::Push(TSubclassOf<UOnaCameraMode_TP> CameraModeClass)
-{
+	
 }
 
 void UOnaCameraModeStack::Evaluate(float DeltaTime, FOnaCameraModeView& OutCameraModeView)
@@ -54,4 +52,25 @@ void UOnaCameraModeStack::UpdateStack(float DeltaTime)
 
 void UOnaCameraModeStack::BlendStack(FOnaCameraModeView& OutCameraModeView) const
 {
+}
+
+UOnaCameraModeBase* UOnaCameraModeStack::GetOrSpawnCameraModeInstance(TSubclassOf<UOnaCameraModeBase> CameraModeClass) 
+{
+	check(CameraModeClass);
+
+	for (UOnaCameraModeBase* CameraMode : CameraModeInstances)
+	{
+		if (CameraMode != nullptr && CameraMode->GetClass() == CameraModeClass)
+		{
+			return CameraMode;
+		}
+	}
+
+	UOnaCameraModeBase* NewCameraModeInstance = NewObject<UOnaCameraModeBase>(GetOuter(), CameraModeClass, NAME_None, RF_NoFlags);
+	check(NewCameraModeInstance);
+	
+
+	CameraModeInstances.Add(NewCameraModeInstance);
+	
+	return NewCameraModeInstance;
 }
